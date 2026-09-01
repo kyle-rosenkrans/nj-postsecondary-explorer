@@ -1,0 +1,6 @@
+# NJDOE source workbooks (~310 MB) — regenerate with etl/fetch_sources.sh
+data/raw/
+
+.DS_Store
+__pycache__/
+*.pyc

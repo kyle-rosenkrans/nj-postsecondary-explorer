@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NJ Postsecondary Enrollment Explorer</title>
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f2f1ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  --good:#0ca30c; --crit:#d03b3b; --good-ink:#006300; --crit-ink:#b32b2b;
+  --neutral-mark:#c3c2b7;
+  --accent-wash:rgba(42,120,214,0.08);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --good:#0ca30c; --crit:#d03b3b; --good-ink:#0ca30c; --crit-ink:#e66767;
+  --neutral-mark:#4a4a47;
+  --accent-wash:rgba(57,135,229,0.14);
+}}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --good:#0ca30c; --crit:#d03b3b; --good-ink:#0ca30c; --crit-ink:#e66767;
+  --neutral-mark:#4a4a47;
+  --accent-wash:rgba(57,135,229,0.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--ink);
+  font-family:Whitney,Calibri,Verdana,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{line-height:1.25;margin:0}
+a{color:var(--s1)}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--border);background:var(--surface)}
+.head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding:22px 0 18px}
+h1{font-size:22px;letter-spacing:-0.01em}
+.sub{color:var(--ink-2);font-size:13.5px;margin-top:5px;max-width:70ch}
+.themebtn{background:var(--surface-2);border:1px solid var(--border);color:var(--ink-2);
+  border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer}
+.themebtn:hover{color:var(--ink)}
+
+/* ---------- controls ---------- */
+.controls{position:sticky;top:0;z-index:40;background:var(--surface);
+  border-bottom:1px solid var(--border);padding:11px 0}
+.ctlrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.ctl{display:flex;align-items:center;gap:7px}
+.ctl label{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+select,input[type=search]{
+  font:inherit;font-size:13.5px;background:var(--surface-2);color:var(--ink);
+  border:1px solid var(--border);border-radius:8px;padding:6px 9px;max-width:230px}
+input[type=search]{min-width:190px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:2px}
+.seg button{font:inherit;font-size:13px;background:none;border:0;color:var(--ink-2);
+  padding:5px 11px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);font-weight:600;
+  box-shadow:0 1px 2px rgba(0,0,0,.10)}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);background:var(--surface);
+  overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{font:inherit;font-size:14px;background:none;border:0;color:var(--ink-2);
+  padding:12px 15px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--ink);font-weight:600;border-bottom-color:var(--s1)}
+
+/* ---------- cards ---------- */
+main{padding:22px 0 64px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px}
+.card h2{font-size:16px;letter-spacing:-0.005em}
+.card .note{color:var(--muted);font-size:12.5px;margin-top:4px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+
+/* ---------- stat tiles ---------- */
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 17px}
+.tile.kipp{border-color:var(--s1);box-shadow:inset 3px 0 0 var(--s1)}
+.tile .lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.tile .big{font-size:34px;font-weight:650;letter-spacing:-0.02em;margin:4px 0 0}
+.tile .cap{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.delta{font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.up{color:var(--good-ink)} .down{color:var(--crit-ink)} .flat{color:var(--muted)}
+
+.badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:2px 6px;border-radius:5px;
+  background:var(--accent-wash);color:var(--s1);border:1px solid var(--s1);vertical-align:2px}
+.sector{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;
+  background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border);white-space:nowrap}
+
+/* ---------- table ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);z-index:2;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tr.ktaf{background:var(--accent-wash)}
+tr.ktaf td:first-child{box-shadow:inset 3px 0 0 var(--s1)}
+tr.ktaf:hover{background:var(--accent-wash);filter:brightness(0.99)}
+td .nm{font-weight:600}
+td .dst{color:var(--muted);font-size:12px}
+.sortcue{color:var(--s1)}
+
+/* ---------- chart bits ---------- */
+svg{display:block;max-width:100%;overflow:visible}
+.gridline{stroke:var(--grid);stroke-width:1}
+.axisline{stroke:var(--axis);stroke-width:1}
+.tick{fill:var(--muted);font-size:11px}
+.axlab{fill:var(--muted);font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.serieslab{font-size:11.5px;font-weight:600}
+.barlab{fill:var(--ink);font-size:11.5px;font-variant-numeric:tabular-nums}
+.catlab{fill:var(--ink-2);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:12.5px;color:var(--ink-2)}
+.legend .k{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:12px;height:3px;border-radius:2px;flex:none}
+.legend .sw.dot{width:10px;height:10px;border-radius:50%}
+
+.tooltip{position:fixed;z-index:200;pointer-events:none;background:var(--surface);
+  border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12.5px;
+  box-shadow:0 6px 22px rgba(0,0,0,.16);max-width:280px;opacity:0;transition:opacity .1s}
+.tooltip .tt-h{font-weight:700;margin-bottom:5px}
+.tooltip .tt-r{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.tooltip .tt-r span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.tooltip .tt-k{display:inline-flex;align-items:center;gap:6px}
+
+/* ---------- picker ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:999px;padding:4px 6px 4px 10px;font-size:12.5px}
+.chip .sw{width:10px;height:10px;border-radius:50%;flex:none}
+.chip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:15px;
+  line-height:1;padding:0 3px;border-radius:4px}
+.chip button:hover{color:var(--crit-ink)}
+.empty{color:var(--muted);font-size:13.5px;padding:26px 4px;text-align:center}
+
+/* ---------- drawer ---------- */
+.drawer{margin-top:14px;border:1px solid var(--s1);border-radius:12px;background:var(--surface);padding:16px}
+.drawer h3{font-size:15.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:13px;margin-top:8px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.closebtn{float:right;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  color:var(--ink-2);cursor:pointer;font:inherit;font-size:12.5px;padding:3px 9px}
+
+.citygroup{margin-top:18px}
+.citygroup:first-child{margin-top:8px}
+.cityhead{font-size:14px;letter-spacing:.02em;display:flex;align-items:baseline;gap:9px;
+  padding-bottom:7px;border-bottom:1px solid var(--grid);margin-bottom:10px}
+.cityhead .cityn{font-size:12px;color:var(--muted);font-weight:400}
+
+details.method{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:0 16px}
+details.method summary{cursor:pointer;padding:14px 0;font-weight:600;font-size:14px}
+details.method[open] summary{border-bottom:1px solid var(--grid);margin-bottom:12px}
+details.method p,details.method li{font-size:13px;color:var(--ink-2);max-width:78ch}
+details.method table{font-size:12.5px;margin:10px 0}
+details.method td,details.method th{white-space:normal}
+.suppressed{color:var(--muted);font-style:italic;font-size:12px}
+@media (max-width:620px){
+  h1{font-size:19px} .tile .big{font-size:28px}
+  .ctl{flex-direction:column;align-items:flex-start;gap:3px;width:100%}
+  .ctl label{font-size:11px}
+  select,input[type=search]{max-width:100%;width:100%}
+  .seg{width:100%}
+  .seg button{flex:1;padding:7px 6px;font-size:12.5px}
+  .card{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head">
+    <div>
+      <h1>New Jersey Postsecondary Enrollment Explorer</h1>
+      <p class="sub">College enrollment rates for every New Jersey high school, classes of 2019&ndash;2024
+      (school years 2018&ndash;19 through 2023&ndash;24). Source: NJ Department of Education School
+      Performance Reports, built on National Student Clearinghouse matches.</p>
+    </div>
+    <button class="themebtn" id="themebtn" type="button">Dark mode</button>
+  </div>
+  <nav class="tabs wrap" role="tablist" id="tabs">
+    <button role="tab" data-tab="overview" aria-selected="true">KIPP overview</button>
+    <button role="tab" data-tab="trends" aria-selected="false">Trends</button>
+    <button role="tab" data-tab="demographics" aria-selected="false">Demographics</button>
+    <button role="tab" data-tab="compare" aria-selected="false">Compare schools</button>
+    <button role="tab" data-tab="about" aria-selected="false">Notes &amp; method</button>
+  </nav>
+</header>
+
+<div class="controls">
+  <div class="wrap ctlrow">
+    <div class="ctl"><label for="f-class">Class of</label>
+      <select id="f-class"></select></div>
+    <div class="ctl"><label>Measured</label>
+      <div class="seg" id="f-timing">
+        <button type="button" data-v="f" aria-pressed="true">Fall after graduation</button>
+        <button type="button" data-v="s" aria-pressed="false">Within 16 months</button>
+      </div></div>
+    <div class="ctl"><label>Enrolled in</label>
+      <div class="seg" id="f-dest">
+        <button type="button" data-v="all" aria-pressed="true">Any institution</button>
+        <button type="button" data-v="4" aria-pressed="false">4-year</button>
+        <button type="button" data-v="2" aria-pressed="false">2-year</button>
+      </div></div>
+    <div class="ctl"><label for="f-city">City</label>
+      <select id="f-city">
+        <option value="">All New Jersey</option>
+        <option value="__THREE__">Newark + Camden + Paterson</option>
+        <option value="Newark">Newark</option>
+        <option value="Camden">Camden</option>
+        <option value="Paterson">Paterson</option>
+      </select></div>
+    <div class="ctl"><label for="f-sector">Sector</label>
+      <select id="f-sector">
+        <option value="">All sectors</option>
+        <option value="District">District</option>
+        <option value="Charter">Charter</option>
+        <option value="Renaissance">Renaissance (Camden)</option>
+        <option value="County vocational">County vocational</option>
+      </select></div>
+    <div class="ctl"><label for="f-q" class="sr">Search</label>
+      <input type="search" id="f-q" placeholder="Search school or district&hellip;"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section id="panel-overview"></section>
+  <section id="panel-trends" hidden></section>
+  <section id="panel-demographics" hidden></section>
+  <section id="panel-compare" hidden></section>
+  <section id="panel-about" hidden></section>
+</main>
+
+<div class="tooltip" id="tip" role="status" aria-live="polite"></div>
+
+<script id="paneldata" type="application/json">__PANEL_JSON__</script>
+<script>
+"use strict";
+/* =========================================================================
+   Data layer
+   ========================================================================= */
+const P = JSON.parse(document.getElementById('paneldata').textContent);
+const SUBGROUPS = P.subgroups;
+const CLASSES   = P.meta.classes;
+const STATE_CDS = P.stateCds;
+
+const ENT = P.entities.map((a, i) => ({
+  i, cds: a[0], school: a[1], district: a[2], county: a[3],
+  city: a[4], sector: a[5], level: a[6], gradespan: a[7]
+}));
+const BY_CDS = new Map(ENT.map(e => [e.cds, e]));
+const STATE  = BY_CDS.get(STATE_CDS);
+
+/* KTAF high schools. TEAM Academy (Newark) and KIPP Cooper Norcross (Camden)
+   are each reported by NJDOE as one KG-12 entity, so the school-level row is
+   the network's high-school row. */
+const KTAF = {
+  team: '807325965',
+  kcna: '071799111',
+};
+const KTAF_SET = new Set(Object.values(KTAF));
+const isKtaf = e => KTAF_SET.has(e.cds);
+
+/* Accessors. Every value is either [rate, ...] or a one-element flag array:
+   ['N'] = no graduates reported, ['*'] = suppressed (fewer than 10 graduates). */
+const flagOf = v => (v && typeof v[0] === 'string') ? v[0] : null;
+const rateOf = v => (v && typeof v[0] === 'number') ? v[0] : null;
+
+function trendCell(i, timing, cls){ return (P.data[i]?.t?.[timing] || {})[cls] || null; }
+function subCell(i, timing, cls, sg){ return (P.data[i]?.g?.[timing]?.[cls] || {})[sg] || null; }
+/* Headline rate for an entity/cohort: the trend file is NJDOE's restated,
+   methodologically consistent series, so it wins; the per-year subgroup file
+   is the fallback (and the only source at district level before 2024). */
+function rate(i, timing, cls){
+  const t = trendCell(i, timing, cls);
+  if (rateOf(t) !== null) return rateOf(t);
+  return rateOf(subCell(i, timing, cls, 0));
+}
+function rateRange(i, timing, cls){
+  const t = trendCell(i, timing, cls);
+  return (t && t.length === 2 && typeof t[0] === 'number') ? t : null;
+}
+function statusOf(i, timing, cls){
+  return flagOf(trendCell(i, timing, cls)) || flagOf(subCell(i, timing, cls, 0));
+}
+
+/* Graduate count for a school/class/group — the size each rate rests on.
+   Source is NJDOE's 4-year Adjusted Cohort Graduation Rate file, not the
+   postsecondary file, which publishes no denominator. See Notes & method. */
+function nOf(i, cls, sg){
+  const v = (P.data[i]?.n?.[cls] || {})[sg ?? 0];
+  return (typeof v === 'number') ? v : null;
+}
+
+const DEST_LABEL  = { all: 'any institution', '4': 'a 4-year institution', '2': 'a 2-year institution' };
+const DEST_SHORT  = { all: 'Enrolled anywhere', '4': 'Enrolled, 4-year', '2': 'Enrolled, 2-year' };
+
+/* The value every view plots, under the current destination filter.
+   'Any institution' prefers NJDOE's restated trend series. The 2-year and
+   4-year rates are derived — the published rate for that school, class and
+   group multiplied by that same row's share of enrolled students attending
+   that institution type — so both factors come from one source row. */
+function val(i, timing, cls, sg){
+  sg = sg || 0;
+  if (S.dest === 'all'){
+    return sg === 0 ? rate(i, timing, cls) : rateOf(subCell(i, timing, cls, sg));
+  }
+  const c = subCell(i, timing, cls, sg);
+  const r = rateOf(c);
+  if (r === null) return null;
+  const share = S.dest === '4' ? c[2] : c[1];
+  if (share === null || share === undefined) return null;
+  return Math.round(r * share) / 100;
+}
+function valStatus(i, timing, cls, sg){
+  sg = sg || 0;
+  return S.dest === 'all' && sg === 0
+    ? statusOf(i, timing, cls)
+    : flagOf(subCell(i, timing, cls, sg));
+}
+/* NJDOE publishes a range only for the all-institutions rate. */
+const valRange = (i, timing, cls) => S.dest === 'all' ? rateRange(i, timing, cls) : null;
+
+const fmtN = n => n === null || n === undefined ? null : n.toLocaleString('en-US');
+const fmt = v => v === null || v === undefined ? '—' : v.toFixed(1) + '%';
+const fmtD = v => v === null || v === undefined ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v).toFixed(1);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shortName(e){
+  let n = e.school || '';
+  n = n.replace(/,?\s*(A New Jersey Nonprofit Corporation|Inc\.?)$/i, '')
+       .replace(/\s*School District$/i, '').trim();
+  return n || e.district;
+}
+const TIMING_LABEL = { f: 'Fall after graduation', s: 'Within 16 months of graduation' };
+
+/* =========================================================================
+   State
+   ========================================================================= */
+const CITIES = ['Newark', 'Camden', 'Paterson'];
+
+const S = {
+  tab: 'overview',
+  ovCities: new Set(CITIES),        /* which cities the overview breakdown shows */
+  cls: 2024,
+  timing: 'f',
+  dest: 'all',                      /* any institution | 4-year | 2-year */
+  city: '',
+  sector: '',
+  q: '',
+  picked: [KTAF.team, KTAF.kcna],   /* trends view */
+  demoCds: KTAF.team,
+  demoSub: 0,
+  sortKey: 'rate',
+  sortDir: -1,
+  openRow: null,
+};
+
+/* Colour slots follow the ENTITY, never its rank: a school keeps its hue for as
+   long as it is selected, no matter what else is added or removed. */
+const SLOTS = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const RESERVED = new Map([[KTAF.team, 0], [KTAF.kcna, 1]]);  /* KIPP always holds slots 1 & 2 */
+const slotOf = new Map(RESERVED);
+
+/* Assign a colour slot to every entity about to be drawn together. An entity
+   keeps the slot it already holds unless another entity in the SAME chart
+   already took it, so removing one series never repaints the survivors. */
+function ensureSlots(list){
+  const ordered = [...new Set(list)].sort((a, b) => (RESERVED.has(a) ? 0 : 1) - (RESERVED.has(b) ? 0 : 1));
+  const used = new Set();
+  ordered.forEach(cds => {
+    let k = slotOf.get(cds);
+    if (k === undefined || used.has(k)){
+      k = 0;
+      while (used.has(k) && k < SLOTS.length - 1) k++;
+      slotOf.set(cds, k);
+    }
+    used.add(k);
+  });
+}
+const colorFor = cds => `var(${SLOTS[slotOf.get(cds) ?? 0]})`;
+
+function cityMatch(e){
+  if (!S.city) return true;
+  if (S.city === '__THREE__') return ['Newark','Camden','Paterson'].includes(e.city);
+  return e.city === S.city;
+}
+function filteredSchools(){
+  const q = S.q.trim().toLowerCase();
+  return ENT.filter(e =>
+    e.level === 'School' && cityMatch(e) &&
+    (!S.sector || e.sector === S.sector) &&
+    (!q || (e.school + ' ' + e.district + ' ' + (e.city||'')).toLowerCase().includes(q))
+  );
+}
+
+/* =========================================================================
+   Tooltip
+   ========================================================================= */
+const tipEl = document.getElementById('tip');
+function showTip(html, x, y){
+  tipEl.innerHTML = html;
+  tipEl.style.opacity = 1;
+  const r = tipEl.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tipEl.style.left = Math.max(8, left) + 'px';
+  tipEl.style.top  = Math.max(8, top) + 'px';
+}
+const hideTip = () => { tipEl.style.opacity = 0; };
+addEventListener('scroll', hideTip, true);
+
+/* =========================================================================
+   Chart primitives (hand-rolled SVG — no external libraries)
+   ========================================================================= */
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function niceDomain(vals){
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  return [Math.max(0, Math.floor((lo - 6) / 10) * 10), Math.min(100, Math.ceil((hi + 6) / 10) * 10)];
+}
+
+/**
+ * Multi-series line chart over the cohort years.
+ * series: [{cds, label, color, pts:[{x:classYear, y:rate|null, range:[lo,hi]|null, flag}]}]
+ */
+function lineChart(host, series, opts){
+  opts = opts || {};
+  host.innerHTML = '';
+  const W = Math.max(320, host.clientWidth || 640);
+  const LABEL_MAX = 6;                       // direct labels satisfy the sub-3:1 contrast relief
+  const roomy = W >= 560;                    // below that the labels crowd out the plot
+  const showLabels = roomy && series.length <= LABEL_MAX;
+  const labelRoom = showLabels ? 124 : 16;
+  const M = { t: 16, r: labelRoom, b: 46, l: 42 };
+  const H = opts.height || 300;
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const svg = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  el('title', {}, svg).textContent = opts.title || 'Postsecondary enrollment rate by graduating class';
+
+  const ys = series.flatMap(s => s.pts.map(p => p.y).filter(v => v !== null));
+  if (!ys.length){ host.innerHTML = '<p class="empty">No data for this selection.</p>'; return; }
+  const [y0, y1] = niceDomain(ys);
+  const X = i => M.l + (CLASSES.length === 1 ? iw / 2 : i * iw / (CLASSES.length - 1));
+  const Y = v => M.t + ih - (v - y0) / (y1 - y0) * ih;
+
+  for (let v = y0; v <= y1; v += 10){
+    el('line', { class: 'gridline', x1: M.l, x2: M.l + iw, y1: Y(v), y2: Y(v) }, svg);
+    el('text', { class: 'tick', x: M.l - 8, y: Y(v) + 4, 'text-anchor': 'end' }, svg).textContent = v + '%';
+  }
+  el('line', { class: 'axisline', x1: M.l, x2: M.l + iw, y1: M.t + ih, y2: M.t + ih }, svg);
+  CLASSES.forEach((c, i) => {
+    el('text', { class: 'tick', x: X(i), y: M.t + ih + 18, 'text-anchor': 'middle' }, svg).textContent = "'" + String(c).slice(2);
+  });
+  el('text', { class: 'axlab', x: M.l, y: H - 2 }, svg).textContent = 'Graduating class';
+
+  const endLabels = [];
+  series.forEach(s => {
+    /* Draw each unbroken run separately so gaps (no graduates / suppressed)
+       are visible as gaps rather than interpolated straight through. */
+    let run = [];
+    const flush = () => {
+      if (run.length > 1){
+        el('path', { d: 'M' + run.map(p => `${X(p.i)},${Y(p.y)}`).join('L'),
+          fill: 'none', stroke: s.color, 'stroke-width': 2,
+          'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+      } else if (run.length === 1){
+        el('circle', { cx: X(run[0].i), cy: Y(run[0].y), r: 4.5, fill: s.color,
+          stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+      }
+      run = [];
+    };
+    s.pts.forEach((p, i) => { if (p.y === null) flush(); else run.push({ i, y: p.y }); });
+    flush();
+    s.pts.forEach((p, i) => {
+      if (p.y === null) return;
+      el('circle', { cx: X(i), cy: Y(p.y), r: 4, fill: s.color,
+        stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    });
+    if (showLabels){
+      const last = [...s.pts].map((p, i) => ({ p, i })).reverse().find(o => o.p.y !== null);
+      if (last) endLabels.push({ x: X(last.i) + 10, y: Y(last.p.y), color: s.color, label: s.label });
+    }
+  });
+
+  /* Push end labels apart so none overlaps its neighbour. */
+  endLabels.sort((a, b) => a.y - b.y);
+  const MINGAP = 14;
+  for (let k = 1; k < endLabels.length; k++){
+    if (endLabels[k].y - endLabels[k - 1].y < MINGAP) endLabels[k].y = endLabels[k - 1].y + MINGAP;
+  }
+  const overflow = endLabels.length ? endLabels[endLabels.length - 1].y - (M.t + ih) : 0;
+  if (overflow > 0) endLabels.forEach(l => { l.y -= overflow; });
+  endLabels.forEach(l => {
+    const t = el('text', { class: 'serieslab', x: l.x, y: l.y + 4, fill: l.color }, svg);
+    t.textContent = l.label.length > 18 ? l.label.slice(0, 17) + '…' : l.label;
+    el('title', {}, t).textContent = l.label;
+  });
+
+  /* crosshair + tooltip */
+  const rule = el('line', { class: 'axisline', x1: 0, x2: 0, y1: M.t, y2: M.t + ih,
+    opacity: 0, 'stroke-width': 1 }, svg);
+  const hit = el('rect', { x: M.l, y: M.t, width: iw, height: ih, fill: 'transparent' }, svg);
+  hit.style.cursor = 'crosshair';
+  hit.addEventListener('mousemove', ev => {
+    const bb = svg.getBoundingClientRect();
+    const rel = (ev.clientX - bb.left - M.l) / iw * (CLASSES.length - 1);
+    const i = Math.max(0, Math.min(CLASSES.length - 1, Math.round(rel)));
+    rule.setAttribute('x1', X(i)); rule.setAttribute('x2', X(i)); rule.setAttribute('opacity', 1);
+    const rows = series.map(s => {
+      const p = s.pts[i];
+      const shown = p.y !== null
+        ? (p.range ? `${p.range[0].toFixed(1)}–${p.range[1].toFixed(1)}%` : fmt(p.y))
+        : (p.flag === 'N' ? 'no graduates' : p.flag === '*' ? 'fewer than 10 grads' : '—');
+      const n = (p.n !== null && p.n !== undefined) ? ` <span style="color:var(--muted);font-weight:400">n=${fmtN(p.n)}</span>` : '';
+      return `<div class="tt-r"><span class="tt-k"><span class="legend"><span class="sw dot" style="background:${s.color}"></span></span>${esc(s.label)}</span><span>${shown}${n}</span></div>`;
+    }).join('');
+    showTip(`<div class="tt-h">Class of ${CLASSES[i]}</div>${rows}`, ev.clientX, ev.clientY);
+  });
+  hit.addEventListener('mouseleave', () => { rule.setAttribute('opacity', 0); hideTip(); });
+}
+
+/**
+ * Horizontal bar chart. rows: [{label, value|null, flag, color, emph}]
+ * Single-series by default (no legend needed — the card title names it).
+ */
+function barChart(host, rows, opts){
+  opts = opts || {};
+  host.innerHTML = '';
+  const W = Math.max(320, host.clientWidth || 640);
+  const labelW = Math.round(Math.min(opts.labelW || 210, Math.max(96, W * 0.42)));
+  const maxChars = Math.max(10, Math.floor(labelW / 6.6));
+  const rowH = opts.rowH || 26, gap = 6;
+  const hasRef = opts.ref !== null && opts.ref !== undefined;
+  const pad = hasRef ? 18 : 4;               /* band for the reference label */
+  const plotH = rows.length * (rowH + gap);
+  const H = plotH + pad + 26;
+  const iw = W - labelW - 56;
+  const svg = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  el('title', {}, svg).textContent = opts.title || 'Enrollment rate by group';
+  const max = 100;
+  const X = v => labelW + v / max * iw;
+
+  [0, 25, 50, 75, 100].forEach(v => {
+    el('line', { class: 'gridline', x1: X(v), x2: X(v), y1: pad, y2: pad + plotH }, svg);
+    el('text', { class: 'tick', x: X(v), y: H - 6, 'text-anchor': 'middle' }, svg).textContent = v + '%';
+  });
+
+  rows.forEach((r, i) => {
+    const y = pad + i * (rowH + gap);
+    const tx = el('text', { class: 'catlab', x: labelW - 10, y: y + rowH / 2 + 4, 'text-anchor': 'end' }, svg);
+    tx.textContent = r.label.length > maxChars ? r.label.slice(0, maxChars - 1) + '…' : r.label;
+    if (r.label.length > maxChars) el('title', {}, tx).textContent = r.label;
+
+    if (r.value === null || r.value === undefined){
+      const t = el('text', { class: 'tick', x: labelW + 6, y: y + rowH / 2 + 4 }, svg);
+      t.textContent = (W < 560)
+        ? (r.flag === 'N' ? 'no graduates' : 'fewer than 10 grads')
+        : (r.flag === 'N' ? 'no graduates reported' : 'fewer than 10 graduates — not reported');
+      return;
+    }
+    const w = Math.max(2, X(r.value) - labelW);
+    const bar = el('rect', { x: labelW, y: y + 3, width: w, height: rowH - 6,
+      rx: 4, fill: r.color || 'var(--s1)' }, svg);
+    bar.addEventListener('mousemove', ev => showTip(
+      `<div class="tt-h">${esc(r.label)}</div>` +
+      `<div class="tt-r"><span>${esc(opts.measure || 'Enrolled')}</span><span>${fmt(r.value)}</span></div>` +
+      (r.n !== null && r.n !== undefined
+        ? `<div class="tt-r"><span>Graduates</span><span>${fmtN(r.n)}</span></div>` : '') +
+      (r.sub ? `<div class="tt-r"><span>${esc(r.sub)}</span><span></span></div>` : ''),
+      ev.clientX, ev.clientY));
+    bar.addEventListener('mouseleave', hideTip);
+    const lab = el('text', { class: 'barlab', x: labelW + w + 7, y: y + rowH / 2 + 4 }, svg);
+    lab.textContent = r.value.toFixed(1) + '%';
+    if (opts.showN && r.n !== null && r.n !== undefined){
+      const tail = el('tspan', {}, lab);
+      tail.setAttribute('style', 'fill:var(--muted);font-size:11px');
+      tail.textContent = `  n=${fmtN(r.n)}`;
+    }
+  });
+
+  /* reference rule (e.g. statewide) — solid, labelled, never colour-alone */
+  if (hasRef){
+    const rx = X(opts.ref);
+    el('line', { x1: rx, x2: rx, y1: pad - 4, y2: pad + plotH, stroke: 'var(--ink-2)', 'stroke-width': 2 }, svg);
+    const near = rx > labelW + iw - 90;      /* flip the label inboard near the right edge */
+    const t = el('text', { class: 'serieslab', x: rx + (near ? -6 : 6), y: 11,
+      'text-anchor': near ? 'end' : 'start', fill: 'var(--ink-2)' }, svg);
+    t.textContent = `${opts.refLabel || 'NJ'} ${opts.ref.toFixed(1)}%`;
+  }
+}
+
+/** Two-segment split bar: [{label, a:{label,value}, b:{label,value}}] */
+function splitBars(host, items){
+  host.innerHTML = '';
+  const W = Math.max(300, host.clientWidth || 600);
+  const rowH = 30, gapY = 30, labelW = 4;
+  const H = items.length * (rowH + gapY) + 8;
+  const svg = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  el('title', {}, svg).textContent = 'Where enrolled students went';
+  const iw = W - labelW;
+  items.forEach((it, i) => {
+    const y = i * (rowH + gapY) + 14;
+    el('text', { class: 'axlab', x: labelW, y: y - 4 }, svg).textContent = it.label;
+    const total = (it.a.value || 0) + (it.b.value || 0);
+    if (!total){
+      el('text', { class: 'tick', x: labelW, y: y + rowH / 2 + 5 }, svg).textContent = 'not reported';
+      return;
+    }
+    const wA = Math.max(0, it.a.value / total * iw);
+    /* 2px surface gap between the two fills — never a border */
+    if (wA > 1) el('rect', { x: labelW, y, width: Math.max(1, wA - 1), height: rowH, rx: 4, fill: 'var(--s1)' }, svg);
+    if (iw - wA > 1) el('rect', { x: labelW + wA + 1, y, width: Math.max(1, iw - wA - 1), height: rowH, rx: 4, fill: 'var(--s2)' }, svg);
+    const put = (v, label, x, anchor, inside) => {
+      const t = el('text', { x, y: y + rowH / 2 + 4, 'text-anchor': anchor,
+        style: `font-size:12px;font-variant-numeric:tabular-nums;font-weight:600;fill:${inside ? '#fff' : 'var(--ink)'}` }, svg);
+      t.textContent = `${label} ${v.toFixed(0)}%`;
+    };
+    /* only label inside the segment when it actually fits */
+    if (wA > 96) put(it.a.value, it.a.label, labelW + 10, 'start', true);
+    else el('text', { class: 'barlab', x: labelW, y: y + rowH + 15 }, svg)
+           .textContent = `${it.a.label} ${it.a.value.toFixed(0)}%`;
+    const wB = iw - wA;
+    if (wB > 96) put(it.b.value, it.b.label, labelW + iw - 10, 'end', true);
+    else el('text', { class: 'barlab', x: labelW + iw, y: y + rowH + 15, 'text-anchor': 'end' }, svg)
+           .textContent = `${it.b.label} ${it.b.value.toFixed(0)}%`;
+  });
+}
+
+/** Inline 6-point sparkline for table rows. */
+function sparkline(i, timing){
+  const pts = CLASSES.map(c => val(i, timing, c));
+  const has = pts.filter(v => v !== null);
+  if (has.length < 2) return '<span class="suppressed">—</span>';
+  const lo = Math.min(...has), hi = Math.max(...has), span = Math.max(1, hi - lo);
+  const W = 62, H = 18;
+  let d = '', open = false;
+  pts.forEach((v, k) => {
+    if (v === null){ open = false; return; }
+    const x = k * W / (CLASSES.length - 1), y = H - 2 - (v - lo) / span * (H - 4);
+    d += (open ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1);
+    open = true;
+  });
+  const last = pts.map((v, k) => ({ v, k })).reverse().find(o => o.v !== null);
+  const lx = last.k * W / (CLASSES.length - 1);
+  const ly = H - 2 - (last.v - lo) / span * (H - 4);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.5" fill="var(--s1)"/></svg>`;
+}
+
+/* =========================================================================
+   View: KIPP overview
+   ========================================================================= */
+function tile(e, timing, cls){
+  const v = val(e.i, timing, cls);
+  const rg = valRange(e.i, timing, cls);
+  const st = valStatus(e.i, timing, cls);
+  const nj = val(STATE.i, timing, cls);
+  const prev = val(e.i, timing, cls - 1);
+  const n = nOf(e.i, cls);
+  const dNj = (v !== null && nj !== null) ? v - nj : null;
+  const dYr = (v !== null && prev !== null) ? v - prev : null;
+  const cityPeers = ENT.filter(x => x.level === 'School' && x.city === e.city && x.cds !== e.cds)
+    .map(x => val(x.i, timing, cls)).filter(x => x !== null);
+  const cityAvg = cityPeers.length ? cityPeers.reduce((a, b) => a + b, 0) / cityPeers.length : null;
+  const dCity = (v !== null && cityAvg !== null) ? v - cityAvg : null;
+  const cls2 = d => d === null ? 'flat' : d > 0.05 ? 'up' : d < -0.05 ? 'down' : 'flat';
+  const arrow = d => d === null ? '' : d > 0.05 ? '▲' : d < -0.05 ? '▼' : '–';
+  const body = v !== null
+    ? `<p class="big">${v.toFixed(1)}%</p>
+       <p class="cap">enrolled in ${DEST_LABEL[S.dest]} · ${TIMING_LABEL[timing].toLowerCase()}${
+         rg ? `<br>NJDOE range ${rg[0].toFixed(1)}–${rg[1].toFixed(1)}%` : ''}${
+         n !== null ? `<br>${fmtN(n)} graduates in the 4-year cohort` : ''}</p>`
+    : `<p class="big" style="font-size:22px;color:var(--muted)">${
+         st === 'N' ? 'No graduates' : st === '*' ? 'Suppressed' : 'Not published'}</p>
+       <p class="cap">${
+         st === 'N' ? 'No graduating cohort at this school for this class.'
+       : st === '*' ? 'Fewer than 10 graduates — withheld by NJDOE to protect student privacy.'
+       : 'NJDOE publishes no figure for this school and class.'}</p>`;
+  return `<div class="tile kipp">
+    <div class="lab">${esc(e.city)} <span class="badge">KTAF</span></div>
+    <h3 style="font-size:15px;margin-top:5px">${esc(shortName(e))}</h3>
+    ${body}
+    <div class="kv" style="margin-top:10px">
+      <dt>vs. New Jersey</dt><dd><span class="delta ${cls2(dNj)}">${arrow(dNj)} ${fmtD(dNj)}</span> <span style="color:var(--muted)">pts</span></dd>
+      <dt>vs. other ${esc(e.city)} high schools</dt><dd><span class="delta ${cls2(dCity)}">${arrow(dCity)} ${fmtD(dCity)}</span> <span style="color:var(--muted)">pts</span></dd>
+      <dt>vs. class of ${cls - 1}</dt><dd><span class="delta ${cls2(dYr)}">${arrow(dYr)} ${fmtD(dYr)}</span> <span style="color:var(--muted)">pts</span></dd>
+    </div></div>`;
+}
+
+function renderOverview(){
+  const host = document.getElementById('panel-overview');
+  const team = BY_CDS.get(KTAF.team), kcna = BY_CDS.get(KTAF.kcna);
+  const nj = val(STATE.i, S.timing, S.cls);
+  const njN = nOf(STATE.i, S.cls);
+
+  host.innerHTML = `
+    <div class="grid3" style="margin-bottom:18px">
+      ${tile(team, S.timing, S.cls)}
+      ${tile(kcna, S.timing, S.cls)}
+      <div class="tile">
+        <div class="lab">Statewide benchmark</div>
+        <h3 style="font-size:15px;margin-top:5px">All New Jersey graduates</h3>
+        <p class="big">${nj === null ? '—' : nj.toFixed(1) + '%'}</p>
+        <p class="cap">enrolled in ${DEST_LABEL[S.dest]} · ${TIMING_LABEL[S.timing].toLowerCase()}${
+          njN !== null ? `<br>${fmtN(njN)} graduates statewide` : ''}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>KIPP against its benchmarks, classes of 2019&ndash;2024</h2>
+      <p class="note">Share of graduates enrolled in ${DEST_LABEL[S.dest]},
+        ${TIMING_LABEL[S.timing].toLowerCase()}. The Newark, Camden and Paterson district lines give
+        the city context. Gaps in a line mean no graduating class that year — KIPP Cooper Norcross
+        graduated its first Camden high-school cohort in 2024.${
+        S.dest === 'all' ? '' : ' District 2-year/4-year splits are published only from the class of 2024.'}</p>
+      <div id="ov-chart" style="margin-top:14px"></div>
+      <div class="legend" id="ov-legend"></div>
+    </div>
+
+    <div class="card">
+      <h2>Every high school, by city</h2>
+      <p class="note">Class of ${S.cls} · enrolled in ${DEST_LABEL[S.dest]} ·
+        ${TIMING_LABEL[S.timing].toLowerCase()}. Each city is ranked on its own. KIPP schools are
+        highlighted; the other high schools in that same city are shown in grey for context.
+        Hover any bar for its graduate count.</p>
+      <div class="ctlrow" style="margin-top:12px">
+        <div class="ctl"><label>Cities</label>
+          <div class="seg" id="ov-cities">${CITIES.map(c =>
+            `<button type="button" data-city="${c}" aria-pressed="${S.ovCities.has(c)}">${c}</button>`).join('')}
+          </div></div>
+      </div>
+      <div id="ov-city"></div>
+      <div class="legend">
+        <span class="k"><span class="sw" style="background:var(--s1)"></span> KIPP (KTAF)</span>
+        <span class="k"><span class="sw" style="background:var(--neutral-mark)"></span> Other city high schools</span>
+        <span class="k"><span class="sw" style="background:var(--ink-2)"></span> New Jersey statewide</span>
+      </div>
+    </div>`;
+
+  /* trend chart: KIPP + home districts + state */
+  const npsD = BY_CDS.get('133570888'),
+        camD = BY_CDS.get('070680888'),
+        patD = BY_CDS.get('314010888');
+  const picks = [team, kcna, npsD, camD, patD, STATE].filter(Boolean);
+  ensureSlots(picks.filter(e => e !== STATE).map(e => e.cds));
+  const series = picks.map(e => ({
+    cds: e.cds,
+    label: e === STATE ? 'New Jersey' : shortName(e),
+    color: e === STATE ? 'var(--ink-2)' : colorFor(e.cds),
+    pts: CLASSES.map(c => ({
+      y: val(e.i, S.timing, c), range: valRange(e.i, S.timing, c),
+      flag: valStatus(e.i, S.timing, c), n: nOf(e.i, c)
+    }))
+  }));
+  document.getElementById('ov-cities').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-city]');
+    if (!b) return;
+    const c = b.dataset.city;
+    S.ovCities.has(c) ? S.ovCities.delete(c) : S.ovCities.add(c);
+    b.setAttribute('aria-pressed', String(S.ovCities.has(c)));
+    renderCityBars();
+  });
+
+  const draw = () => {
+    lineChart(document.getElementById('ov-chart'), series, { height: 320 });
+    document.getElementById('ov-legend').innerHTML = series.map(s =>
+      `<span class="k"><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('');
+    renderCityBars();
+  };
+  draw();
+  onResize(draw);
+}
+
+function renderCityBars(){
+  const host = document.getElementById('ov-city');
+  if (!host) return;
+  const chosen = CITIES.filter(c => S.ovCities.has(c));
+  if (!chosen.length){
+    host.innerHTML = '<p class="empty">Choose at least one city above.</p>';
+    return;
+  }
+  const nj = val(STATE.i, S.timing, S.cls);
+  host.innerHTML = chosen.map(c => `<section class="citygroup">
+      <h3 class="cityhead">${esc(c)}<span class="cityn" id="ovn-${c}"></span></h3>
+      <div id="ovc-${c}"></div></section>`).join('');
+
+  chosen.forEach(c => {
+    const rows = ENT.filter(e => e.level === 'School' && e.city === c)
+      .map(e => ({ e, v: val(e.i, S.timing, S.cls) }))
+      .filter(r => r.v !== null)
+      .sort((a, b) => b.v - a.v)
+      .map(r => ({
+        label: shortName(r.e),
+        value: r.v,
+        n: nOf(r.e.i, S.cls),
+        color: isKtaf(r.e) ? 'var(--s1)' : 'var(--neutral-mark)',
+        sub: `${r.e.sector} · ${r.e.district}`
+      }));
+    /* "no KIPP here" is about whether KTAF runs a high school in this city — not
+       about whether its bar happened to draw, since the rate can be suppressed. */
+    const kippHere  = ENT.some(e => e.level === 'School' && e.city === c && isKtaf(e));
+    const kippShown = rows.some(r => r.color === 'var(--s1)');
+    const n = document.getElementById('ovn-' + c);
+    n.textContent = `${rows.length} high school${rows.length === 1 ? '' : 's'} with a reported rate`
+      + (!kippHere ? ' · no KIPP high school in this city'
+        : !kippShown ? ' · KIPP rate not reported for this class' : '');
+    const h = document.getElementById('ovc-' + c);
+    if (!rows.length) h.innerHTML = '<p class="empty">No reported rates for this class.</p>';
+    else barChart(h, rows, { labelW: 250, ref: nj, refLabel: 'New Jersey',
+      measure: 'Enrolled', title: `${c} high schools, postsecondary enrollment rate` });
+  });
+}
+
+/* =========================================================================
+   View: Trends
+   ========================================================================= */
+function renderTrends(){
+  const host = document.getElementById('panel-trends');
+  const pool = filteredSchools();
+  host.innerHTML = `
+    <div class="card">
+      <h2>Enrollment over time</h2>
+      <p class="note">Share of graduates enrolled in ${DEST_LABEL[S.dest]},
+        ${TIMING_LABEL[S.timing].toLowerCase()}. Pick up to eight schools or districts; each keeps its
+        colour for as long as it is selected. Gaps mean no graduating class that year. Hover for
+        graduate counts.${S.dest === 'all' ? '' : ' District splits are published only from the class of 2024.'}</p>
+      <div class="ctlrow" style="margin-top:12px">
+        <div class="ctl"><label for="t-add">Add</label>
+          <select id="t-add" style="max-width:330px"><option value="">Choose a school or district…</option></select></div>
+        <div class="seg"><button type="button" id="t-clear">Clear all</button></div>
+      </div>
+      <div class="chips" id="t-chips"></div>
+      <div id="t-chart" style="margin-top:16px"></div>
+      <div class="legend" id="t-legend"></div>
+    </div>
+    <div class="card">
+      <h2>Change since the class of 2019</h2>
+      <p class="note">Percentage-point change in the rate of enrolling in ${DEST_LABEL[S.dest]}
+        (${TIMING_LABEL[S.timing].toLowerCase()}), first to most recent reported class.
+        Schools matching the current filters (${pool.length}).</p>
+      <div id="t-delta"></div>
+    </div>`;
+
+  const sel = document.getElementById('t-add');
+  const addable = ENT.filter(e => e.level !== 'State')
+    .sort((a, b) => (a.city || 'zz').localeCompare(b.city || 'zz') || shortName(a).localeCompare(shortName(b)));
+  sel.insertAdjacentHTML('beforeend', addable.map(e =>
+    `<option value="${e.cds}">${esc(shortName(e))}${e.city ? ' — ' + esc(e.city) : ''}${e.level === 'District' ? ' (district)' : ''}</option>`).join(''));
+  sel.onchange = () => {
+    if (sel.value && !S.picked.includes(sel.value) && S.picked.length < 8) S.picked.push(sel.value);
+    sel.value = ''; renderTrends();
+  };
+  document.getElementById('t-clear').onclick = () => { S.picked = []; renderTrends(); };
+
+  ensureSlots(S.picked);
+  const chips = document.getElementById('t-chips');
+  chips.innerHTML = S.picked.map(cds => {
+    const e = BY_CDS.get(cds); if (!e) return '';
+    return `<span class="chip"><span class="sw" style="background:${colorFor(cds)}"></span>
+      ${esc(shortName(e))}${isKtaf(e) ? ' <span class="badge">KTAF</span>' : ''}
+      <button type="button" data-x="${cds}" aria-label="Remove">×</button></span>`;
+  }).join('') || '<span class="suppressed">Nothing selected — add a school above.</span>';
+  chips.querySelectorAll('[data-x]').forEach(b => b.onclick = () => {
+    S.picked = S.picked.filter(c => c !== b.dataset.x); renderTrends();
+  });
+
+  const series = S.picked.map(cds => BY_CDS.get(cds)).filter(Boolean).map(e => ({
+    cds: e.cds, label: shortName(e), color: colorFor(e.cds),
+    pts: CLASSES.map(c => ({ y: val(e.i, S.timing, c), range: valRange(e.i, S.timing, c),
+                             flag: valStatus(e.i, S.timing, c), n: nOf(e.i, c) }))
+  }));
+  series.push({ cds: STATE.cds, label: 'New Jersey', color: 'var(--ink-2)',
+    pts: CLASSES.map(c => ({ y: val(STATE.i, S.timing, c), range: valRange(STATE.i, S.timing, c),
+                             flag: null, n: nOf(STATE.i, c) })) });
+
+  const draw = () => {
+    lineChart(document.getElementById('t-chart'), series, { height: 340 });
+    document.getElementById('t-legend').innerHTML = series.map(s =>
+      `<span class="k"><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('');
+    const deltas = pool.map(e => {
+      const first = CLASSES.map(c => val(e.i, S.timing, c)).find(v => v !== null);
+      const lastArr = CLASSES.map(c => val(e.i, S.timing, c)).filter(v => v !== null);
+      const last = lastArr[lastArr.length - 1];
+      return (first !== undefined && lastArr.length > 1) ? { e, d: last - first } : null;
+    }).filter(Boolean).sort((a, b) => b.d - a.d);
+    deltaChart(document.getElementById('t-delta'), deltas);
+  };
+  draw(); onResize(draw);
+}
+
+/** Diverging change chart — blue up / red down, neutral zero line. */
+function deltaChart(host, rows){
+  host.innerHTML = '';
+  if (!rows.length){ host.innerHTML = '<p class="empty">No school has two reported classes under these filters.</p>'; return; }
+  const W = Math.max(320, host.clientWidth || 640);
+  const labelW = Math.round(Math.min(250, Math.max(96, W * 0.42)));
+  const maxChars = Math.max(10, Math.floor(labelW / 6.6));
+  const rowH = 22, gap = 5;
+  const H = rows.length * (rowH + gap) + 26;
+  const svg = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img' }, host);
+  el('title', {}, svg).textContent = 'Change in enrollment rate since the first reported class';
+  const iw = W - labelW - 60;
+  const m = Math.max(10, Math.ceil(Math.max(...rows.map(r => Math.abs(r.d))) / 5) * 5);
+  const zero = labelW + iw / 2;
+  const X = v => zero + v / m * (iw / 2);
+  [-m, -m / 2, 0, m / 2, m].forEach(v => {
+    el('line', { class: 'gridline', x1: X(v), x2: X(v), y1: 2, y2: rows.length * (rowH + gap) + 2 }, svg);
+    el('text', { class: 'tick', x: X(v), y: H - 6, 'text-anchor': 'middle' }, svg)
+      .textContent = (v > 0 ? '+' : '') + v;
+  });
+  el('line', { class: 'axisline', x1: zero, x2: zero, y1: 2, y2: rows.length * (rowH + gap) + 2 }, svg);
+  rows.forEach((r, i) => {
+    const y = 2 + i * (rowH + gap);
+    const t = el('text', { class: 'catlab', x: labelW - 10, y: y + rowH / 2 + 4, 'text-anchor': 'end' }, svg);
+    const nm = `${shortName(r.e)}${r.e.city ? ' · ' + r.e.city : ''}`;
+    t.textContent = nm.length > maxChars ? nm.slice(0, maxChars - 1) + '…' : nm;
+    if (nm.length > maxChars) el('title', {}, t).textContent = nm;
+    if (isKtaf(r.e)) t.setAttribute('style', 'font-weight:700;fill:var(--ink)');
+    const w = Math.abs(X(r.d) - zero);
+    const rect = el('rect', { x: r.d >= 0 ? zero : zero - w, y: y + 3, width: Math.max(2, w),
+      height: rowH - 6, rx: 4, fill: r.d >= 0 ? 'var(--s1)' : 'var(--s8)' }, svg);
+    rect.addEventListener('mousemove', ev => showTip(
+      `<div class="tt-h">${esc(shortName(r.e))}</div>
+       <div class="tt-r"><span>Difference</span><span>${fmtD(r.d)} pts</span></div>` +
+      (r.n !== null && r.n !== undefined
+        ? `<div class="tt-r"><span>Graduates</span><span>${fmtN(r.n)}</span></div>` : '') +
+      `<div class="tt-r"><span>${esc(r.e.sector)}</span><span>${esc(r.e.city || '')}</span></div>`,
+      ev.clientX, ev.clientY));
+    rect.addEventListener('mouseleave', hideTip);
+    el('text', { class: 'barlab', x: r.d >= 0 ? zero + w + 6 : zero - w - 6, y: y + rowH / 2 + 4,
+      'text-anchor': r.d >= 0 ? 'start' : 'end' }, svg).textContent = fmtD(r.d);
+  });
+}
+
+/* =========================================================================
+   View: Demographics
+   ========================================================================= */
+function renderDemographics(){
+  const host = document.getElementById('panel-demographics');
+  const e = BY_CDS.get(S.demoCds) || BY_CDS.get(KTAF.team);
+  const njAll = val(STATE.i, S.timing, S.cls, 0);
+
+  host.innerHTML = `
+    <div class="card">
+      <h2>Enrollment by student group</h2>
+      <p class="note">Class of ${S.cls} · enrolled in ${DEST_LABEL[S.dest]} ·
+        ${TIMING_LABEL[S.timing].toLowerCase()}. Each bar carries its graduate count.
+        Groups with fewer than 10 graduates are suppressed by NJDOE and shown as such.</p>
+      <div class="ctlrow" style="margin-top:12px">
+        <div class="ctl"><label for="d-school">School</label>
+          <select id="d-school" style="max-width:380px"></select></div>
+      </div>
+      <h3 style="margin-top:16px;font-size:15px">${esc(shortName(e))}${isKtaf(e) ? ' <span class="badge">KTAF</span>' : ''}
+        <span class="sector">${esc(e.sector)}</span> ${e.city ? `<span class="sector">${esc(e.city)}</span>` : ''}</h3>
+      <div id="d-bars" style="margin-top:12px"></div>
+      <div class="legend">
+        <span class="k"><span class="sw" style="background:var(--s1)"></span> ${esc(shortName(e))}</span>
+        <span class="k"><span class="sw" style="background:var(--ink-2)"></span> This school, all students</span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Where enrolled students went</h2>
+        <p class="note">Share of this school's <em>enrolled</em> graduates, class of ${S.cls} —
+          independent of the “enrolled in” filter above. The 2-year/4-year split is published for
+          every class and both measures; public/private and in-state/out-of-state are published for
+          the 16-month measure in every year and for the fall measure from the class of 2024 on.
+          A student who attended more than one institution is counted in more than one category, so a
+          pair can sum to slightly over 100%.</p>
+        <div id="d-mix" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <h2>One group over time</h2>
+        <p class="note">Enrolled in ${DEST_LABEL[S.dest]}, ${TIMING_LABEL[S.timing].toLowerCase()},
+          classes of 2019&ndash;2024.</p>
+        <div class="ctlrow" style="margin-top:10px">
+          <div class="ctl"><label for="d-sub">Group</label><select id="d-sub"></select></div>
+        </div>
+        <div id="d-trend" style="margin-top:12px"></div>
+        <div class="legend" id="d-trend-legend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Gaps within ${esc(shortName(e))}</h2>
+      <p class="note">Each group's rate of enrolling in ${DEST_LABEL[S.dest]} minus this school's
+        all-student rate, class of ${S.cls}. Hover a bar for its graduate count.</p>
+      <div id="d-gap"></div>
+    </div>`;
+
+  const ssel = document.getElementById('d-school');
+  const opts = ENT.filter(x => x.level === 'School')
+    .sort((a, b) => shortName(a).localeCompare(shortName(b)));
+  ssel.innerHTML = opts.map(x =>
+    `<option value="${x.cds}"${x.cds === e.cds ? ' selected' : ''}>${esc(shortName(x))}${x.city ? ' — ' + esc(x.city) : ''}</option>`).join('');
+  ssel.onchange = () => { S.demoCds = ssel.value; renderDemographics(); };
+
+  const gsel = document.getElementById('d-sub');
+  gsel.innerHTML = SUBGROUPS.map((s, k) =>
+    `<option value="${k}"${k === S.demoSub ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  gsel.onchange = () => { S.demoSub = +gsel.value; renderDemographics(); };
+
+  const allRate = val(e.i, S.timing, S.cls, 0);
+
+  const draw = () => {
+    /* by-group bars */
+    const rows = SUBGROUPS.map((name, k) => ({
+      label: name,
+      value: val(e.i, S.timing, S.cls, k),
+      flag: flagOf(subCell(e.i, S.timing, S.cls, k)),
+      n: nOf(e.i, S.cls, k),
+      color: 'var(--s1)',
+      sub: njAll !== null ? `New Jersey, all students: ${fmt(njAll)}` : ''
+    })).filter(r => r.value !== null || r.flag);
+    if (!rows.length){
+      document.getElementById('d-bars').innerHTML = '<p class="empty">No student-group data published for this school and class.</p>';
+    } else {
+      barChart(document.getElementById('d-bars'), rows,
+        { labelW: 232, ref: allRate, refLabel: 'All students', showN: true,
+          measure: `Enrolled in ${DEST_LABEL[S.dest]}` });
+    }
+
+    /* institution mix */
+    const c0 = subCell(e.i, S.timing, S.cls, 0) || [];
+    const mix = [];
+    if (c0[1] != null || c0[2] != null) mix.push({ label: '2-year vs 4-year', a: { label: '2-yr', value: c0[1] || 0 }, b: { label: '4-yr', value: c0[2] || 0 } });
+    if (c0[3] != null || c0[4] != null) mix.push({ label: 'Public vs private', a: { label: 'Public', value: c0[3] || 0 }, b: { label: 'Private', value: c0[4] || 0 } });
+    if (c0[5] != null || c0[6] != null) mix.push({ label: 'In-state vs out-of-state', a: { label: 'In NJ', value: c0[5] || 0 }, b: { label: 'Out of NJ', value: c0[6] || 0 } });
+    const mixHost = document.getElementById('d-mix');
+    if (!mix.length) mixHost.innerHTML = '<p class="empty">Institution-type detail is not published for this school, class and measure.</p>';
+    else splitBars(mixHost, mix);
+
+    /* one group over time */
+    const gseries = [
+      { cds: e.cds, label: shortName(e), color: 'var(--s1)',
+        pts: CLASSES.map(c => ({ y: val(e.i, S.timing, c, S.demoSub), range: null,
+          flag: flagOf(subCell(e.i, S.timing, c, S.demoSub)), n: nOf(e.i, c, S.demoSub) })) },
+      { cds: STATE.cds, label: 'New Jersey', color: 'var(--ink-2)',
+        pts: CLASSES.map(c => ({ y: val(STATE.i, S.timing, c, S.demoSub), range: null,
+          flag: flagOf(subCell(STATE.i, S.timing, c, S.demoSub)), n: nOf(STATE.i, c, S.demoSub) })) },
+    ];
+    const th = document.getElementById('d-trend');
+    if (!gseries[0].pts.some(p => p.y !== null)){
+      th.innerHTML = `<p class="empty">No published values for ${esc(SUBGROUPS[S.demoSub])} at this school.</p>`;
+      document.getElementById('d-trend-legend').innerHTML = '';
+    } else {
+      lineChart(th, gseries, { height: 240 });
+      document.getElementById('d-trend-legend').innerHTML = gseries.map(s =>
+        `<span class="k"><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('') +
+        `<span class="k" style="color:var(--muted)">Statewide by group is published for the class of 2024 only.</span>`;
+    }
+
+    /* gaps */
+    const gaps = SUBGROUPS.map((name, k) => {
+      const v = val(e.i, S.timing, S.cls, k);
+      return (k === 0 || v === null || allRate === null) ? null
+        : { e: { school: name, city: '', sector: e.sector, cds: 'x' }, d: v - allRate, n: nOf(e.i, S.cls, k) };
+    }).filter(Boolean).sort((a, b) => b.d - a.d);
+    const gh = document.getElementById('d-gap');
+    if (!gaps.length) gh.innerHTML = '<p class="empty">Not enough reported groups to show gaps.</p>';
+    else deltaChart(gh, gaps);
+  };
+  draw(); onResize(draw);
+}
+
+/* =========================================================================
+   View: Compare
+   ========================================================================= */
+const COLS = [
+  { k: 'name',   t: 'School',        num: false },
+  { k: 'city',   t: 'City',          num: false },
+  { k: 'sector', t: 'Sector',        num: false },
+  { k: 'rate',   t: 'Enrolled',      num: true  },
+  { k: 'n',      t: 'Graduates',     num: true  },
+  { k: 'other',  t: 'Other measure', num: true  },
+  { k: 'vsnj',   t: 'vs NJ',         num: true  },
+  { k: 'chg',    t: 'Since 2019',    num: true  },
+  { k: 'spark',  t: 'Trend',         num: false },
+];
+function renderCompare(){
+  const host = document.getElementById('panel-compare');
+  const other = S.timing === 'f' ? 's' : 'f';
+  const nj = val(STATE.i, S.timing, S.cls);
+  const rows = filteredSchools().map(e => {
+    const v = val(e.i, S.timing, S.cls);
+    const o = val(e.i, other, S.cls);
+    const seq = CLASSES.map(c => val(e.i, S.timing, c)).filter(x => x !== null);
+    return {
+      e, rate: v, other: o, n: nOf(e.i, S.cls),
+      vsnj: (v !== null && nj !== null) ? v - nj : null,
+      chg: seq.length > 1 ? seq[seq.length - 1] - seq[0] : null,
+      status: valStatus(e.i, S.timing, S.cls),
+      name: shortName(e), city: e.city || '', sector: e.sector,
+    };
+  });
+  const dir = S.sortDir;
+  rows.sort((a, b) => {
+    const k = S.sortKey;
+    let av = a[k], bv = b[k];
+    if (k === 'name' || k === 'city' || k === 'sector' || k === 'spark'){
+      return String(av).localeCompare(String(bv)) * dir;
+    }
+    if (av === null) return 1; if (bv === null) return -1;   /* nulls always last */
+    return (av - bv) * dir;
+  });
+
+  host.innerHTML = `
+    <div class="card" style="padding-bottom:10px">
+      <h2>${rows.length} high school${rows.length === 1 ? '' : 's'}</h2>
+      <p class="note">Class of ${S.cls} · enrolled in ${DEST_LABEL[S.dest]} ·
+        ${TIMING_LABEL[S.timing].toLowerCase()}. Click a column to sort, or a row for the full profile.
+        “Other measure” is the ${TIMING_LABEL[other].toLowerCase()} rate for the same class.
+        “Graduates” is the 4-year cohort graduate count — the size the rate rests on.</p>
+    </div>
+    <div class="tablewrap"><table><thead><tr>${
+      COLS.map(c => `<th class="${c.num ? 'num' : ''}" data-k="${c.k}">${c.t}${
+        S.sortKey === c.k ? ` <span class="sortcue">${dir > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('')
+    }</tr></thead><tbody>${
+      rows.map(r => {
+        const cellRate = r.rate !== null ? fmt(r.rate)
+          : `<span class="suppressed" title="${
+               r.status === 'N' ? 'No graduating cohort for this class'
+             : r.status === '*' ? 'Fewer than 10 graduates — withheld by NJDOE'
+             : 'Not published for this school and class'}">${
+               r.status === 'N' ? 'no grads' : r.status === '*' ? 'n&lt;10' : '—'}</span>`;
+        return `<tr class="${isKtaf(r.e) ? 'ktaf' : ''}" data-cds="${r.e.cds}">
+          <td><span class="nm">${esc(r.name)}</span>${isKtaf(r.e) ? ' <span class="badge">KTAF</span>' : ''}
+              <div class="dst">${esc(r.e.district)}</div></td>
+          <td>${esc(r.city)}</td>
+          <td><span class="sector">${esc(r.sector)}</span></td>
+          <td class="num">${cellRate}</td>
+          <td class="num">${r.n !== null ? fmtN(r.n) : '<span class="suppressed">—</span>'}</td>
+          <td class="num">${r.other !== null ? fmt(r.other) : '<span class="suppressed">—</span>'}</td>
+          <td class="num ${r.vsnj === null ? '' : r.vsnj >= 0 ? 'up' : 'down'}">${fmtD(r.vsnj)}</td>
+          <td class="num ${r.chg === null ? '' : r.chg >= 0 ? 'up' : 'down'}">${fmtD(r.chg)}</td>
+          <td>${sparkline(r.e.i, S.timing)}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="9" class="empty">No schools match these filters.</td></tr>`
+    }</tbody></table></div>
+    <div id="c-drawer"></div>`;
+
+  host.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (S.sortKey === k) S.sortDir *= -1;
+    else { S.sortKey = k; S.sortDir = (k === 'name' || k === 'city' || k === 'sector') ? 1 : -1; }
+    renderCompare();
+  });
+  host.querySelectorAll('tr[data-cds]').forEach(tr => tr.onclick = () => {
+    S.openRow = S.openRow === tr.dataset.cds ? null : tr.dataset.cds;
+    drawDrawer();
+  });
+  drawDrawer();
+}
+
+function drawDrawer(){
+  const host = document.getElementById('c-drawer');
+  if (!host) return;
+  const e = S.openRow && BY_CDS.get(S.openRow);
+  if (!e){ host.innerHTML = ''; return; }
+  const c0 = subCell(e.i, S.timing, S.cls, 0) || [];
+  const groups = SUBGROUPS.map((name, k) => ({
+    name, v: val(e.i, S.timing, S.cls, k), n: nOf(e.i, S.cls, k)
+  })).filter(g => g.v !== null);
+  host.innerHTML = `<div class="drawer">
+    <button class="closebtn" type="button" id="dw-x">Close</button>
+    <h3>${esc(shortName(e))}${isKtaf(e) ? ' <span class="badge">KTAF</span>' : ''}</h3>
+    <p class="note">${esc(e.district)} · ${esc(e.county)} County · ${esc(e.sector)}${e.city ? ' · ' + esc(e.city) : ''}${e.gradespan ? ' · grades ' + esc(e.gradespan) : ''}</p>
+    <div class="grid2" style="margin-top:12px">
+      <div>
+        <div class="lab" style="font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Class of ${S.cls} · ${esc(DEST_SHORT[S.dest])}</div>
+        <dl class="kv" style="margin-top:6px">
+          <dt>Graduates (4-year cohort)</dt><dd>${fmtN(nOf(e.i, S.cls)) ?? '—'}</dd>
+          <dt>Fall after graduation</dt><dd>${fmt(val(e.i, 'f', S.cls))}</dd>
+          <dt>Within 16 months</dt><dd>${fmt(val(e.i, 's', S.cls))}</dd>
+          <dt>New Jersey (same measure)</dt><dd>${fmt(val(STATE.i, S.timing, S.cls))}</dd>
+          ${c0[1] != null ? `<dt>Of those enrolled: 2-year</dt><dd>${fmt(c0[1])}</dd>` : ''}
+          ${c0[2] != null ? `<dt>Of those enrolled: 4-year</dt><dd>${fmt(c0[2])}</dd>` : ''}
+          ${c0[3] != null ? `<dt>Of those enrolled: public</dt><dd>${fmt(c0[3])}</dd>` : ''}
+          ${c0[5] != null ? `<dt>Of those enrolled: in NJ</dt><dd>${fmt(c0[5])}</dd>` : ''}
+        </dl>
+      </div>
+      <div>
+        <div class="lab" style="font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Reported student groups</div>
+        <dl class="kv" style="margin-top:6px">
+          ${groups.map(g => `<dt>${esc(g.name)}</dt><dd>${fmt(g.v)}${
+              g.n !== null ? ` <span style="color:var(--muted)">n=${fmtN(g.n)}</span>` : ''}</dd>`).join('') ||
+            '<dt style="grid-column:1/-1">No student-group values published for this class.</dt>'}
+        </dl>
+      </div>
+    </div>
+    <div style="margin-top:12px"><button class="themebtn" type="button" id="dw-trend">Show in Trends →</button></div>
+  </div>`;
+  document.getElementById('dw-x').onclick = () => { S.openRow = null; drawDrawer(); };
+  document.getElementById('dw-trend').onclick = () => {
+    if (!S.picked.includes(e.cds) && S.picked.length < 8) S.picked.push(e.cds);
+    setTab('trends');
+  };
+  host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* =========================================================================
+   View: Notes & method
+   ========================================================================= */
+function renderAbout(){
+  document.getElementById('panel-about').innerHTML = `
+  <div class="card">
+    <h2>What this shows</h2>
+    <p style="color:var(--ink-2);max-width:78ch">The share of a high school's graduates who enrolled
+    in a postsecondary institution, either by the fall immediately after graduation or at any point
+    within 16 months of graduating. NJDOE builds these rates by matching graduates recorded in NJ SMART
+    against National Student Clearinghouse enrollment records.</p>
+    <p style="color:var(--ink-2);max-width:78ch"><strong>A class of 2024 graduated at the end of the
+    2023&ndash;24 school year.</strong> The six cohorts here — classes of 2019 through 2024 — therefore
+    cover school years 2018&ndash;19 through 2023&ndash;24.</p>
+  </div>
+
+  <details class="method" open>
+    <summary>Sources</summary>
+    <ul style="color:var(--ink-2)">
+      <li><a href="https://www.nj.gov/education/spr/adddata/" target="_blank" rel="noopener">NJDOE School Performance Reports — additional data files</a>:
+        <code>2023_24_Postsecondary_Enrollment_Rates.xlsx</code> (class of 2024, by student group) and
+        <code>Postsecondary_Enrollment_Rate_Trends_Fall_16month_Rates.xlsx</code> (classes 2019&ndash;2023 trend).</li>
+      <li><a href="https://www.nj.gov/education/spr/download/" target="_blank" rel="noopener">NJDOE School Performance Reports — downloadable data</a>:
+        the per-year <code>Database_SchoolDetail.xlsx</code> for 2018&ndash;19 through 2022&ndash;23,
+        sheets <code>PostsecondaryEnrRatesFall</code> and <code>PostsecondaryEnrRates16mos</code>,
+        which carry the student-group cuts for classes 2019&ndash;2023. City and grade span come from
+        each file's <code>Header and Contact</code> sheet.</li>
+      <li><a href="https://www.nj.gov/education/spr/adddata/acgr.shtml" target="_blank" rel="noopener">Adjusted
+        Cohort Graduation Rate reports</a>: the 4-year cohort file for each class 2019&ndash;2024, which is
+        where the <strong>graduate counts</strong> come from.</li>
+    </ul>
+  </details>
+
+  <details class="method">
+    <summary>Graduate counts — what “n” is here, and what it is not</summary>
+    <p><strong>NJDOE publishes no denominator with the postsecondary rates.</strong> Those files carry
+    percentages only — no counts, in any year, at any level. So the counts shown throughout this tool come
+    from a different NJDOE file: the <strong>4-year Adjusted Cohort Graduation Rate</strong> report for the
+    same class, which publishes the number of graduates for the same school, class and student group.</p>
+    <p>That is the closest published measure of how many students a rate rests on, and for reading the
+    figures it does the job — it tells you whether a rate describes 12 graduates or 400. But it is
+    <strong>not</strong> the exact denominator NJDOE used. The definitions differ: the ACGR figure counts
+    graduates of the four-year adjusted cohort, while the postsecondary denominator is graduates as reported
+    by the district for that class, which can include students outside that cohort.</p>
+    <p>Across all 39,320 school-class-group cells where both files report, the two agree on the
+    fewer-than-10 privacy threshold <strong>94.0%</strong> of the time. In 5.3% of cells the postsecondary
+    file suppresses a group while the graduation file shows 10 or more graduates, and in 0.4% the reverse.
+    <strong>Treat the count as the scale of the group, not as an exact denominator</strong>, and don't
+    recompute a numerator from it.</p>
+    <p>Where the graduation file itself suppresses a count, it shows as “—”. Statewide and district counts
+    come from that file's own statewide and district rows.</p>
+  </details>
+
+  <details class="method">
+    <summary>2-year and 4-year rates — how they are derived</summary>
+    <p>NJDOE publishes the <em>overall</em> enrollment rate as a share of graduates, then the 2-year and
+    4-year figures as shares of the students who <em>enrolled</em>. The “enrolled in” filter converts the
+    second into the first: the published rate for that school, class and group, multiplied by that same
+    row's share attending that institution type. Both factors come from a single source row, so the derived
+    figure is internally consistent.</p>
+    <p>A school where 60% of graduates enrolled anywhere and 80% of those went to a 4-year institution
+    therefore reads as <strong>48% of graduates enrolled in a 4-year institution</strong>.</p>
+    <p>Two consequences worth knowing. A student who attended both a 2-year and a 4-year institution is
+    counted in both categories, so the two derived rates can sum to slightly more than the all-institutions
+    rate. And because the split is published only in the per-year student-group files, switching off “any
+    institution” moves every figure onto that series — which covers schools in all six classes, but
+    districts only from the class of 2024.</p>
+  </details>
+
+  <details class="method">
+    <summary>How the rate is reported, and why some numbers are ranges</summary>
+    <p>A small share of graduates each year cannot be matched by the Clearinghouse, so from the class of
+    2023 on NJDOE publishes a range rather than a single number. The <strong>lower bound</strong> is the
+    share of graduates actually matched to an enrollment record; the <strong>upper bound</strong> is that
+    same count divided by 97% of the graduating cohort — mechanically the lower bound ÷ 0.97.</p>
+    <p><strong>This tool shows the lower bound — the matched rate — everywhere</strong>, because it is the
+    only figure published on a consistent basis for all six cohorts. Where NJDOE published a range, the
+    full range appears in the chart tooltip and on the KIPP overview tiles.</p>
+    <p>The 2-year/4-year, public/private and in-state/out-of-state figures are shares of the students who
+    <em>enrolled</em>, not of all graduates. A student who attended more than one institution can be counted
+    in more than one category, so those pairs can sum to more than 100%.</p>
+  </details>
+
+  <details class="method">
+    <summary>Cohort labelling — a trap in the source files</summary>
+    <p>The per-year SPR workbooks label their postsecondary summary sheet with a <code>ClassYear</code> that
+    is the <em>start</em> year of the school year, so the 2018&ndash;19 file reads <code>2018</code> for what is
+    really the class of 2019. The student-group sheets in each file carry no year label at all.</p>
+    <p>Rather than trust the label, each file's sheets were matched value-by-value against NJDOE's own
+    published trend series across every school in the state. Each file's student-group sheets align with the
+    class that graduated <em>that</em> school year (median absolute difference 0.1&ndash;0.3 points on the
+    16-month measure, ~1 point on the fall measure, where NJDOE restated more), and align with no other
+    cohort. The 2022&ndash;23 file matches its cohort exactly, to the tenth, on 100% of schools.</p>
+  </details>
+
+  <details class="method">
+    <summary>Two series, and why they can differ slightly</summary>
+    <p>NJDOE has restated earlier cohorts in its trend file as Clearinghouse matching improved. So the same
+    school and class can carry two slightly different published values:</p>
+    <ul>
+      <li><strong>Headline rates</strong> (tiles, tables, trend lines) come from the trend file — NJDOE's
+      restated, methodologically consistent series, and the only source covering districts in every year.</li>
+      <li><strong>Student-group rates</strong> come from each year's own SPR release, the only place they
+      are published. For classes 2019&ndash;2022 these are original, un-restated figures, typically within
+      about a point of the restated headline.</li>
+    </ul>
+    <p>Read student-group figures against each other and against that same file's all-student row — which is
+    the reference line drawn on the group chart — rather than against the headline number.</p>
+  </details>
+
+  <details class="method">
+    <summary>Coverage and gaps</summary>
+    <ul>
+      <li>Student-group cuts run 2019&ndash;2024 at school level. At <strong>district</strong> level NJDOE
+      publishes group cuts for the class of 2024 only; district trend lines cover all six cohorts.</li>
+      <li>Gender, homelessness, foster care, military-connected and migrant groups begin with the class of
+      2022; the 2018&ndash;19 through 2020&ndash;21 files report race/ethnicity, economic disadvantage,
+      disability and multilingual learners only.</li>
+      <li>Statewide figures <em>by group</em> are published for the class of 2024 only. Earlier years carry a
+      statewide all-student figure.</li>
+      <li>The <strong>2-year/4-year</strong> split is published for every class and both measures.
+      Public/private and in-state/out-of-state are published for the 16-month measure in every year, but for
+      the fall measure only from the class of 2024.</li>
+      <li>Graduate counts run 2019&ndash;2024 for schools, districts and the state, but NJDOE suppresses the
+      count itself for small groups, so some rates appear with no count.</li>
+      <li><strong>N</strong> means no graduates were reported for that class; <strong>fewer than 10</strong>
+      means NJDOE suppressed the value to protect student privacy. The tool distinguishes the two.</li>
+    </ul>
+  </details>
+
+  <details class="method">
+    <summary>Sectors, cities and the KIPP entities</summary>
+    <p><strong>City</strong> is the school's own mailing city from the SPR directory, not its county or
+    chartering district — so a Newark charter and an Essex County vocational campus sitting in Newark both
+    appear under Newark.</p>
+    <p><strong>Sector</strong>: <em>District</em> (traditional public), <em>Charter</em> (NJDOE county code 80),
+    <em>Renaissance</em> (the three Camden Urban Hope Act projects — KIPP Cooper Norcross, Camden Prep and
+    Mastery Schools of Camden), and <em>County vocational</em>.</p>
+    <p>NJDOE reports <strong>TEAM Academy Charter School</strong> (Newark) and
+    <strong>KIPP: Cooper Norcross</strong> (Camden) each as a single KG&ndash;12 entity rather than naming the
+    high school separately, so the school-level row is the network's high-school result. KIPP Cooper Norcross
+    graduated its first Camden high-school class in 2024, which is why its earlier cohorts read
+    “no graduates”.</p>
+  </details>
+
+  <div class="card" style="margin-top:18px">
+    <p class="note" style="margin:0">Built ${esc(P.meta.built)} from NJDOE files. Rates are NJDOE's as
+    published, except the 2-year and 4-year rates, which are derived as described above. Nothing here is
+    recomputed from student records, and the tool contains no student-level data.</p>
+  </div>`;
+}
+
+/* =========================================================================
+   Shell
+   ========================================================================= */
+let resizeFns = [];
+function onResize(fn){ resizeFns.push(fn); }
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => resizeFns.forEach(f => f()), 160); });
+
+const RENDER = { overview: renderOverview, trends: renderTrends,
+                 demographics: renderDemographics, compare: renderCompare, about: renderAbout };
+function render(){
+  resizeFns = [];
+  for (const k in RENDER) document.getElementById('panel-' + k).hidden = (k !== S.tab);
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.tab === S.tab)));
+  RENDER[S.tab]();
+}
+function setTab(t){ S.tab = t; render(); scrollTo({ top: 0, behavior: 'smooth' }); }
+
+document.getElementById('tabs').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab);
+});
+
+const clsSel = document.getElementById('f-class');
+clsSel.innerHTML = [...CLASSES].reverse().map(c =>
+  `<option value="${c}"${c === S.cls ? ' selected' : ''}>${c} <span></span></option>`).join('');
+clsSel.onchange = () => { S.cls = +clsSel.value; render(); };
+
+document.getElementById('f-timing').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-v]'); if (!b) return;
+  S.timing = b.dataset.v;
+  document.querySelectorAll('#f-timing button').forEach(x =>
+    x.setAttribute('aria-pressed', String(x.dataset.v === S.timing)));
+  render();
+});
+document.getElementById('f-dest').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-v]'); if (!b) return;
+  S.dest = b.dataset.v;
+  document.querySelectorAll('#f-dest button').forEach(x =>
+    x.setAttribute('aria-pressed', String(x.dataset.v === S.dest)));
+  render();
+});
+document.getElementById('f-city').onchange   = e => { S.city = e.target.value; render(); };
+document.getElementById('f-sector').onchange = e => { S.sector = e.target.value; render(); };
+let qt;
+document.getElementById('f-q').oninput = e => {
+  clearTimeout(qt); const v = e.target.value;
+  qt = setTimeout(() => { S.q = v; if (S.tab === 'compare' || S.tab === 'trends') render(); }, 200);
+};
+
+/* theme */
+const tb = document.getElementById('themebtn');
+const applyTheme = t => {
+  if (t) document.documentElement.setAttribute('data-theme', t);
+  else document.documentElement.removeAttribute('data-theme');
+  const dark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+  tb.textContent = dark ? 'Light mode' : 'Dark mode';
+};
+let theme = null;
+try { theme = localStorage.getItem('njps-theme'); } catch (_) {}
+applyTheme(theme);
+tb.onclick = () => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+    (!document.documentElement.hasAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+  theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('njps-theme', theme); } catch (_) {}
+  applyTheme(theme); render();
+};
+
+render();
+</script>
+</body>
+</html>
