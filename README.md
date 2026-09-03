@@ -129,16 +129,8 @@ python3 etl/build_panel.py      # data/raw/   -> data/panel.json  (~2 MB, commit
 python3 etl/build_html.py       # panel.json + app/template.html -> Postsecondary_Explorer.html
 ```
 
-To publish as a Claude Artifact instead (artifacts supply their own
-`<html>/<head>/<body>`, so the document wrapper has to come off):
-
-```bash
-python3 etl/build_artifact.py out.html   # body-level build, <title> first
-```
-
 Only `openpyxl` is required. Edit the UI in `app/template.html` (the `__PANEL_JSON__`
-placeholder is where the data is injected) and re-run `build_html.py` — both builds read
-that one template, so the standalone file and the artifact never drift.
+placeholder is where the data is injected) and re-run `build_html.py`.
 
 `data/panel.json` is committed so the tool can be rebuilt without re-downloading 310 MB of
 source workbooks.
