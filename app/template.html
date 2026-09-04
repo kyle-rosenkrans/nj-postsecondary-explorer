@@ -191,8 +191,8 @@ details.method td,details.method th{white-space:normal}
   <div class="wrap head">
     <div>
       <h1>New Jersey Postsecondary Enrollment Explorer</h1>
-      <p class="sub">College enrollment rates for every New Jersey high school, classes of 2019&ndash;2024
-      (school years 2018&ndash;19 through 2023&ndash;24). Source: NJ Department of Education School
+      <p class="sub">College enrollment rates for every New Jersey high school, classes of 2016&ndash;2024
+      (school years 2015&ndash;16 through 2023&ndash;24). Source: NJ Department of Education School
       Performance Reports, built on National Student Clearinghouse matches.</p>
     </div>
     <button class="themebtn" id="themebtn" type="button">Dark mode</button>
@@ -348,7 +348,7 @@ function shortName(e){
   let n = e.school || '';
   n = n.replace(/,?\s*(A New Jersey Nonprofit Corporation|Inc\.?)$/i, '')
        .replace(/\s*School District$/i, '').trim();
-  return n || e.district;
+  return n || e.district || e.cds || '';
 }
 const TIMING_LABEL = { f: 'Fall after graduation', s: 'Within 16 months of graduation' };
 
@@ -733,7 +733,7 @@ function renderOverview(){
     </div>
 
     <div class="card">
-      <h2>KIPP against its benchmarks, classes of 2019&ndash;2024</h2>
+      <h2>KIPP against its benchmarks, classes of 2016&ndash;2024</h2>
       <p class="note">Share of graduates enrolled in ${DEST_LABEL[S.dest]},
         ${TIMING_LABEL[S.timing].toLowerCase()}. The Newark, Camden and Paterson district lines give
         the city context. Gaps in a line mean no graduating class that year — KIPP Cooper Norcross
@@ -860,7 +860,7 @@ function renderTrends(){
       <div class="legend" id="t-legend"></div>
     </div>
     <div class="card">
-      <h2>Change since the class of 2019</h2>
+      <h2>Change since each school's first reported class</h2>
       <p class="note">Percentage-point change in the rate of enrolling in ${DEST_LABEL[S.dest]}
         (${TIMING_LABEL[S.timing].toLowerCase()}), first to most recent reported class.
         Schools matching the current filters (${pool.length}).</p>
@@ -999,7 +999,7 @@ function renderDemographics(){
       <div class="card">
         <h2>One group over time</h2>
         <p class="note">Enrolled in ${DEST_LABEL[S.dest]}, ${TIMING_LABEL[S.timing].toLowerCase()},
-          classes of 2019&ndash;2024.</p>
+          classes of 2016&ndash;2024.</p>
         <div class="ctlrow" style="margin-top:10px">
           <div class="ctl"><label for="d-sub">Group</label><select id="d-sub"></select></div>
         </div>
@@ -1101,7 +1101,7 @@ const COLS = [
   { k: 'n',      t: 'Graduates',     num: true  },
   { k: 'other',  t: 'Other measure', num: true  },
   { k: 'vsnj',   t: 'vs NJ',         num: true  },
-  { k: 'chg',    t: 'Since 2019',    num: true  },
+  { k: 'chg',    t: 'Since first',   num: true  },
   { k: 'spark',  t: 'Trend',         num: false },
 ];
 function renderCompare(){
@@ -1237,8 +1237,8 @@ function renderAbout(){
     within 16 months of graduating. NJDOE builds these rates by matching graduates recorded in NJ SMART
     against National Student Clearinghouse enrollment records.</p>
     <p style="color:var(--ink-2);max-width:78ch"><strong>A class of 2024 graduated at the end of the
-    2023&ndash;24 school year.</strong> The six cohorts here — classes of 2019 through 2024 — therefore
-    cover school years 2018&ndash;19 through 2023&ndash;24.</p>
+    2023&ndash;24 school year.</strong> The nine cohorts here — classes of 2016 through 2024 — therefore
+    cover school years 2015&ndash;16 through 2023&ndash;24.</p>
   </div>
 
   <details class="method" open>
@@ -1248,10 +1248,11 @@ function renderAbout(){
         <code>2023_24_Postsecondary_Enrollment_Rates.xlsx</code> (class of 2024, by student group) and
         <code>Postsecondary_Enrollment_Rate_Trends_Fall_16month_Rates.xlsx</code> (classes 2019&ndash;2023 trend).</li>
       <li><a href="https://www.nj.gov/education/spr/download/" target="_blank" rel="noopener">NJDOE School Performance Reports — downloadable data</a>:
-        the per-year <code>Database_SchoolDetail.xlsx</code> for 2018&ndash;19 through 2022&ndash;23,
-        sheets <code>PostsecondaryEnrRatesFall</code> and <code>PostsecondaryEnrRates16mos</code>,
-        which carry the student-group cuts for classes 2019&ndash;2023. City and grade span come from
-        each file's <code>Header and Contact</code> sheet.</li>
+        the per-year <code>Database_SchoolDetail.xlsx</code> for 2015&ndash;16 through 2022&ndash;23,
+        which carry the student-group cuts for classes 2016&ndash;2023 (2016&ndash;17 and 2017&ndash;18 use
+        the <code>PostsecondaryEnrRatesFall</code>/<code>...16mos</code> sheets; 2015&ndash;16 has a single
+        sheet, placed as the 16-month measure by continuity). City and grade span come from
+        each file's header sheet.</li>
       <li><a href="https://www.nj.gov/education/spr/adddata/acgr.shtml" target="_blank" rel="noopener">Adjusted
         Cohort Graduation Rate reports</a>: the 4-year cohort file for each class 2019&ndash;2024, which is
         where the <strong>graduate counts</strong> come from.</li>
@@ -1301,7 +1302,7 @@ function renderAbout(){
     share of graduates actually matched to an enrollment record; the <strong>upper bound</strong> is that
     same count divided by 97% of the graduating cohort — mechanically the lower bound ÷ 0.97.</p>
     <p><strong>This tool shows the lower bound — the matched rate — everywhere</strong>, because it is the
-    only figure published on a consistent basis for all six cohorts. Where NJDOE published a range, the
+    only figure published on a consistent basis for all nine cohorts. Where NJDOE published a range, the
     full range appears in the chart tooltip and on the KIPP overview tiles.</p>
     <p>The 2-year/4-year, public/private and in-state/out-of-state figures are shares of the students who
     <em>enrolled</em>, not of all graduates. A student who attended more than one institution can be counted
@@ -1317,7 +1318,10 @@ function renderAbout(){
     published trend series across every school in the state. Each file's student-group sheets align with the
     class that graduated <em>that</em> school year (median absolute difference 0.1&ndash;0.3 points on the
     16-month measure, ~1 point on the fall measure, where NJDOE restated more), and align with no other
-    cohort. The 2022&ndash;23 file matches its cohort exactly, to the tenth, on 100% of schools.</p>
+    cohort. The 2022&ndash;23 file matches its cohort exactly, to the tenth, on 100% of schools. The older
+    files (classes 2016&ndash;2018) predate that trend series, so their labels were confirmed instead by
+    statewide continuity — each year's statewide rate sits smoothly between its neighbours with no
+    discontinuity.</p>
   </details>
 
   <details class="method">
@@ -1328,8 +1332,9 @@ function renderAbout(){
       <li><strong>Headline rates</strong> (tiles, tables, trend lines) come from the trend file — NJDOE's
       restated, methodologically consistent series, and the only source covering districts in every year.</li>
       <li><strong>Student-group rates</strong> come from each year's own SPR release, the only place they
-      are published. For classes 2019&ndash;2022 these are original, un-restated figures, typically within
-      about a point of the restated headline.</li>
+      are published, and are original (un-restated) figures — typically within about a point of the restated
+      headline. Classes 2016&ndash;2018 predate the restated trend file entirely, so their headline rate
+      <em>is</em> the original student-group figure.</li>
     </ul>
     <p>Read student-group figures against each other and against that same file's all-student row — which is
     the reference line drawn on the group chart — rather than against the headline number.</p>
@@ -1338,18 +1343,23 @@ function renderAbout(){
   <details class="method">
     <summary>Coverage and gaps</summary>
     <ul>
-      <li>Student-group cuts run 2019&ndash;2024 at school level. At <strong>district</strong> level NJDOE
-      publishes group cuts for the class of 2024 only; district trend lines cover all six cohorts.</li>
+      <li>Student-group cuts run 2016&ndash;2024 at school level. At <strong>district</strong> level NJDOE
+      publishes group cuts for the class of 2024 only; district trend lines run 2019 onward.</li>
+      <li>Classes 2016&ndash;2018 are school-level only and predate the restated trend, so district and
+      state trend lines begin at 2019. The class of <strong>2016</strong> has the 16-month measure only
+      (NJDOE published one rate that year), so fall trend lines begin at 2017.</li>
       <li>Gender, homelessness, foster care, military-connected and migrant groups begin with the class of
-      2022; the 2018&ndash;19 through 2020&ndash;21 files report race/ethnicity, economic disadvantage,
-      disability and multilingual learners only.</li>
+      2022; classes 2016&ndash;2021 report race/ethnicity, economic disadvantage, disability and
+      multilingual learners only. In 2015&ndash;16 and 2016&ndash;17 the race category is a standalone
+      "Asian" (mapped to the combined Asian/Native Hawaiian/Pacific Islander group here — the NHPI share is
+      negligible).</li>
       <li>Statewide figures <em>by group</em> are published for the class of 2024 only. Earlier years carry a
       statewide all-student figure.</li>
       <li>The <strong>2-year/4-year</strong> split is published for every class and both measures.
       Public/private and in-state/out-of-state are published for the 16-month measure in every year, but for
       the fall measure only from the class of 2024.</li>
-      <li>Graduate counts run 2019&ndash;2024 for schools, districts and the state, but NJDOE suppresses the
-      count itself for small groups, so some rates appear with no count.</li>
+      <li>Graduate counts run 2019&ndash;2024 (from the Adjusted Cohort Graduation Rate files); classes
+      2016&ndash;2018 show rates without counts. NJDOE also suppresses the count itself for small groups.</li>
       <li><strong>N</strong> means no graduates were reported for that class; <strong>fewer than 10</strong>
       means NJDOE suppressed the value to protect student privacy. The tool distinguishes the two.</li>
     </ul>
