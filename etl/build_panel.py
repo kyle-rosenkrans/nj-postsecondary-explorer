@@ -78,15 +78,7 @@ SG_CANON = {
     "students in foster care": "Students in Foster Care",
     "military-connected students": "Military-Connected Students",
     "migrant students": "Migrant Students",
-    # older-file (2016-2018) label variants:
-    "african american": "Black or African American",
-    "american indian": "American Indian or Alaska Native",
-    "asian": "Asian, Native Hawaiian, or Pacific Islander",
-    "english language learners": "Multilingual Learners",
 }
-# 2015-16 splits Asian and Native Hawaiian into two rows; the modern bucket is
-# combined. "asian" maps above (NHPI is negligible); the separate NHPI row is dropped.
-SG_SKIP = {"native hawaiian"}
 SUBGROUPS = [
     "All Students",
     "American Indian or Alaska Native",
@@ -105,7 +97,7 @@ SUBGROUPS = [
     "Migrant Students",
 ]
 SG_IDX = {s: i for i, s in enumerate(SUBGROUPS)}
-CLASSES = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+CLASSES = [2019, 2020, 2021, 2022, 2023, 2024]
 
 # ------------------------------------------------- entity metadata (city etc.)
 SPR_FILES = [
@@ -117,7 +109,7 @@ SPR_FILES = [
 ]
 
 city_of, gradespan = {}, {}
-for fn, _ in [("spr_2017-2018.xlsx", 2018)] + SPR_FILES + [("spr_2023-2024.xlsx", 2024)]:
+for fn, _ in SPR_FILES + [("spr_2023-2024.xlsx", 2024)]:
     wb = openpyxl.load_workbook(D + fn, read_only=True, data_only=True)
     for r in wb["Header and Contact"].iter_rows(min_row=2, values_only=True):
         if not r or not r[0]:
@@ -154,10 +146,8 @@ def touch(cds, county, dname, sname, level):
     if e is None:
         e = ent[cds] = {"cds": cds, "county": county, "district": dname,
                         "school": sname, "level": level}
-    else:  # newest truthy value wins; None never erases an existing name
-        if county: e["county"] = county
-        if dname:  e["district"] = dname
-        if sname:  e["school"] = sname
+    else:  # prefer most recent naming (files processed oldest -> newest)
+        e["district"], e["school"], e["county"] = dname, sname, county
     return e
 
 # ------------------------------------------------------------ subgroup panel
@@ -166,64 +156,11 @@ panel = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 STATE = "999999999"
 
 def put(cds, timing, cls, sg, vals, flag=None):
-    # Key off the base rate: if it is suppressed/absent, the 2yr/4yr and other
-    # splits are meaningless (some source rows carry a stray 0 there), so store
-    # only the flag. Otherwise store the full vector.
-    if vals[0] is None:
-        if flag:                       # 'N' (no cohort) / '*' (fewer than 10)
+    if all(v is None for v in vals):
+        if flag:                       # keep 'N' / '*' so the UI can say why
             panel[cds][timing][cls][SG_IDX[sg]] = [flag]
         return
     panel[cds][timing][cls][SG_IDX[sg]] = vals
-
-# ---------- older SPR files (classes 2016-2018): different schemas -------------
-# Verified by statewide continuity that each file's postsecondary sheets describe
-# the class graduating that school year (2015-16 -> 2016, etc.), same rule as the
-# newer files. 2015-16 carries a SINGLE rate sheet, which continuity places as the
-# 16-month measure (statewide 76.8 aligns with 2016-17's 16-month 76.1, not fall
-# 71.1). These years predate NJDOE's restated trend file, so they are original
-# figures and are intentionally not written to the trend series.
-OLDER = [
-    ("spr_2015-2016.xlsx", 2016, [("PostSecondaryEnrollmentRates", "s", False)]),
-    ("spr_2016-2017.xlsx", 2017, [("PostsecondaryEnrRatesFall", "f", False),
-                                  ("PostsecondaryEnrRates16mos", "s", False)]),
-    ("spr_2017-2018.xlsx", 2018, [("PostsecondaryEnrRatesFall", "f", True),
-                                  ("PostsecondaryEnrRates16mos", "s", True)]),
-]
-for fn, cls, sheets in OLDER:
-    wb = openpyxl.load_workbook(D + fn, read_only=True, data_only=True)
-    for sheet, timing, names in sheets:
-        ws = wb[sheet]
-        if names:                          # cc,cn,dc,dn,sc,sn,group,rate,2yr,4yr[,pub,priv,in,out]
-            ci, di, si, gi, ri, p2i, p4i, cni, dni, sni = 0, 2, 4, 6, 7, 8, 9, 1, 3, 5
-        else:                              # cc,dc,sc,group,rate,2yr,4yr[,pub,priv,in,out]
-            ci, di, si, gi, ri, p2i, p4i = 0, 1, 2, 3, 4, 5, 6
-            cni = dni = sni = None
-        wide = timing == "s" and ws.max_column > p4i + 1
-        wide_cols = (p4i + 1, p4i + 2, p4i + 3, p4i + 4)
-        for r in ws.iter_rows(min_row=2, values_only=True):
-            if not r or r[ci] is None or r[gi] is None:
-                continue
-            low = str(r[gi]).strip().lower()
-            if low in SG_SKIP:
-                continue
-            rate, _, flag = num3(r[ri])
-            vals = [rate, num(r[p2i])[0], num(r[p4i])[0]]
-            vals += [num(r[i])[0] for i in wide_cols] if wide else [None] * 4
-            if low == "statewide":
-                touch(STATE, "State", "State", "New Jersey (statewide)", "State")
-                put(STATE, timing, cls, "All Students", vals, flag)
-                continue
-            sg = SG_CANON.get(low)
-            if sg is None:
-                print(f"  !! unmapped subgroup {r[gi]!r} in {fn}", file=sys.stderr)
-                continue
-            cds = f"{str(r[ci]).strip().zfill(2)}{str(r[di]).strip().zfill(4)}{str(r[si]).strip().zfill(3)}"
-            touch(cds, r[cni] if cni is not None else None,
-                       r[dni] if dni is not None else None,
-                       r[sni] if sni is not None else None, "School")
-            put(cds, timing, cls, sg, vals, flag)
-    wb.close()
-    print(f"[subgroups] {fn} -> class of {cls}", file=sys.stderr)
 
 for fn, cls in SPR_FILES:
     wb = openpyxl.load_workbook(D + fn, read_only=True, data_only=True)
@@ -362,10 +299,6 @@ for cds in sorted(ent):
     e["city"] = c
     e["sector"] = sector(cds, e["district"])
     e["gradespan"] = gradespan.get(cds)
-    # A few schools appear only in the nameless older files (closed before 2018);
-    # give them a stable label so the UI never has a null name.
-    if not e["school"]:
-        e["school"] = e["district"] or f"School {cds}"
     entities.append(e)
 
 idx = {e["cds"]: i for i, e in enumerate(entities)}

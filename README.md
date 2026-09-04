@@ -1,15 +1,15 @@
 # NJ Postsecondary Enrollment Explorer
 
 A self-contained explorer for New Jersey postsecondary (college) enrollment rates —
-every high school in the state, classes of 2016 through 2024.
+every high school in the state, classes of 2019 through 2024.
 
 **Current build:** `Postsecondary_Explorer.html` (~2 MB). Just double-click it.
 All data is baked into the file; it works offline, with no server and no CDN.
 
 **Live tool:** https://kyle-rosenkrans.github.io/nj-postsecondary-explorer/ — open it in any browser, or share that link.
 
-A **class of 2024** graduated at the end of the **2023–24 school year**, so the nine
-cohorts here cover school years **2015–16 through 2023–24**.
+A **class of 2024** graduated at the end of the **2023–24 school year**, so the six
+cohorts here cover school years **2018–19 through 2023–24**.
 
 ## What it does
 
@@ -17,18 +17,18 @@ Five views, sharing one filter bar (class year · fall vs 16-month · **enrolled
 2-year** · city · sector · search):
 
 - **KIPP overview** — stat tiles for TEAM Academy (Newark) and KIPP: Cooper Norcross
-  (Camden) against New Jersey, their home district, and their own prior class; a nine-year
+  (Camden) against New Jersey, their home district, and their own prior class; a six-year
   trend line against Newark Public Schools, Camden City, Paterson Public Schools and the
   state; and a per-city breakdown where Newark, Camden and Paterson each get their own
   ranked list (toggle any city on or off), with the KIPP schools highlighted against the
   other high schools in that same city.
-- **Trends** — pick up to eight schools or districts and chart them over the nine cohorts,
+- **Trends** — pick up to eight schools or districts and chart them over the six cohorts,
   plus a diverging chart of change since each school's first reported class.
 - **Demographics** — enrollment by student group for any school and class, each bar carrying its
   graduate count, with the school's all-student rate as a reference line; the 2-year/4-year,
   public/private and in-state/out-of-state mix; one group tracked over time; and within-school gaps.
 - **Compare schools** — sortable table of every high school matching the filters, with both
-  measures, graduate counts, gap to the state, change since first reported class and a sparkline. Click a row for a
+  measures, graduate counts, gap to the state, six-year change and a sparkline. Click a row for a
   full profile.
 - **Notes & method** — sources, the range methodology, cohort labelling, and coverage gaps.
 
@@ -52,7 +52,7 @@ one source row, so the result is internally consistent. Validated against NJDOE'
 discrepancy 0.12 points, i.e. rounding. Because a student who attended both a 2-year and a 4-year
 institution is counted in both, the two derived rates can sum to slightly more than the
 all-institutions rate. The split is published only in the per-year student-group files, so switching
-off "any institution" covers schools in all nine classes but districts only from the class of 2024.
+off "any institution" covers schools in all six classes but districts only from the class of 2024.
 
 **Graduate counts ("n") come from a different file, and are not the exact denominator.** The
 postsecondary files publish percentages only — no counts, in any year, at any level. The counts shown
@@ -76,7 +76,7 @@ figures against that same file's all-student row, which is the reference line on
 **Ranges.** From the class of 2023 NJDOE publishes a range, because a small share of
 graduates cannot be matched. The lower bound is the share actually matched; the upper bound
 is that count over 97% of the cohort (mechanically, lower ÷ 0.97). **The tool shows the
-lower bound everywhere** — the only figure published on a consistent basis across all nine
+lower bound everywhere** — the only figure published on a consistent basis across all six
 cohorts. Where NJDOE published a range, the full range appears in tooltips and on the
 overview tiles.
 
@@ -95,7 +95,8 @@ graduates and NJDOE withheld the value. The tool keeps these distinct and never 
 as the other. KIPP Cooper Norcross graduated its first Camden high-school class in 2024,
 which is why its earlier cohorts read "no graduates".
 
-**Known gaps.** Classes 2016–2018 are school-level only and predate NJDOE's restated trend file, so their headline rate is the original student-group figure and district/state trend lines begin at 2019. The class of 2016 has the 16-month measure only, so fall trend lines begin at 2017. Graduate counts run 2019–2024. District-level *group* cuts exist for the class of 2024 only (district trend lines run 2019 on). Gender, homelessness, foster care, military-connected and migrant
+**Known gaps.** District-level *group* cuts exist for the class of 2024 only (district trend
+lines cover all six). Gender, homelessness, foster care, military-connected and migrant
 groups begin with the class of 2022. Statewide *by group* is class of 2024 only. The
 **2-year/4-year split is published for every class and both measures**; public/private and
 in-state/out-of-state are 16-month-only before the class of 2024. NJDOE suppresses some
@@ -117,7 +118,7 @@ Both from the NJ Department of Education School Performance Reports:
   cohort 2019 uses a different column layout, so `etl/fetch_sources.sh` pins each URL and
   `etl/build_panel.py` carries a per-year column map.
 - [Downloadable data](https://www.nj.gov/education/spr/download/) — the per-year
-  `Database_SchoolDetail.xlsx` (2015–16 onward; older files use different sheet/column layouts, handled in `build_panel.py`) for 2018–19 through 2023–24, sheets
+  `Database_SchoolDetail.xlsx` for 2018–19 through 2023–24, sheets
   `PostsecondaryEnrRatesFall`, `PostsecondaryEnrRates16mos`, and `Header and Contact`
   (city, grade span). The 2023–24 database's postsecondary sheets ship empty, which is why
   the standalone class-of-2024 file is needed.

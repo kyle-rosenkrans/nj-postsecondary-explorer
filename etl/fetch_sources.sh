@@ -13,7 +13,7 @@ curl -fsSL "$ADD/2023_24_Postsecondary_Enrollment_Rates.xlsx"                   
 curl -fsSL "$ADD/Postsecondary_Enrollment_Rate_Trends_Fall_16month_Rates.xlsx"   -o data/raw/ps_trends.xlsx
 
 echo "-> per-year School Performance Report databases"
-for y in 2015-2016 2016-2017 2017-2018 2018-2019 2019-2020 2020-2021 2021-2022 2022-2023 2023-2024; do
+for y in 2018-2019 2019-2020 2020-2021 2021-2022 2022-2023 2023-2024; do
   echo "   $y"
   curl -fsSL "$SPR/$y/Database_SchoolDetail.xlsx" -o "data/raw/spr_${y}.xlsx"
 done
