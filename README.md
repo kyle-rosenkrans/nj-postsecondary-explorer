@@ -6,6 +6,8 @@ every high school in the state, classes of 2019 through 2024.
 **Current build:** `Postsecondary_Explorer.html` (~2 MB). Just double-click it.
 All data is baked into the file; it works offline, with no server and no CDN.
 
+**Live tool:** https://kyle-rosenkrans.github.io/nj-postsecondary-explorer/ — open it in any browser, or share that link.
+
 A **class of 2024** graduated at the end of the **2023–24 school year**, so the six
 cohorts here cover school years **2018–19 through 2023–24**.
 

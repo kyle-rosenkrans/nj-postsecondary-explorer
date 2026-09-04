@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Inject data/panel.json into app/template.html -> Postsecondary_Explorer.html."""
+"""Inject data/panel.json into app/template.html.
+
+Writes two identical files: Postsecondary_Explorer.html (download / double-click)
+and index.html (the GitHub Pages entry point, so the bare site URL opens the tool).
+"""
 import json, pathlib
 
 root = pathlib.Path(__file__).resolve().parent.parent
@@ -11,6 +15,7 @@ blob = json.dumps(panel, separators=(",", ":"), ensure_ascii=False)
 blob = blob.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 out = tpl.replace("__PANEL_JSON__", blob)
-dest = root / "Postsecondary_Explorer.html"
-dest.write_text(out)
-print(f"wrote {dest.name}  ({dest.stat().st_size/1e6:.2f} MB)")
+for name in ("Postsecondary_Explorer.html", "index.html"):
+    dest = root / name
+    dest.write_text(out)
+    print(f"wrote {dest.name}  ({dest.stat().st_size/1e6:.2f} MB)")
